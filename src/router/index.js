@@ -50,6 +50,12 @@ const routes = [
     meta: { title: '悼亡诗词库 — Memento Vivere' }
   },
   {
+    path: '/ways-to-die',
+    name: 'ways-to-die',
+    component: () => import('@/pages/WaysToDiePage.vue'),
+    meta: { title: '一万种死法 — Memento Vivere' }
+  },
+  {
     path: '/practices',
     name: 'practices',
     component: () => import('@/pages/PracticeListPage.vue'),

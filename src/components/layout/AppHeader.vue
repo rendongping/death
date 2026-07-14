@@ -20,6 +20,7 @@
           <Transition name="fade">
             <div v-if="moreOpen" class="nav-dropdown-menu" @mouseleave="moreOpen = false">
               <router-link to="/poetry/archive" class="dropdown-link" @click="moreOpen = false">悼亡诗词库</router-link>
+              <router-link to="/ways-to-die" class="dropdown-link" @click="moreOpen = false">一万种死法</router-link>
               <router-link to="/memorial" class="dropdown-link" @click="moreOpen = false">哀悼空间</router-link>
               <router-link to="/advance-directives" class="dropdown-link" @click="moreOpen = false">我的意愿</router-link>
               <router-link to="/gratitude" class="dropdown-link" @click="moreOpen = false">感恩时刻</router-link>
@@ -43,6 +44,7 @@
         <router-link to="/bucketlist" class="mobile-nav-link">遗愿清单</router-link>
         <router-link to="/letters" class="mobile-nav-link">信件</router-link>
         <router-link to="/poetry/archive" class="mobile-nav-link">悼亡诗词库</router-link>
+        <router-link to="/ways-to-die" class="mobile-nav-link">一万种死法</router-link>
         <router-link to="/memorial" class="mobile-nav-link">哀悼空间</router-link>
         <router-link to="/advance-directives" class="mobile-nav-link">我的意愿</router-link>
         <router-link to="/gratitude" class="mobile-nav-link">感恩时刻</router-link>

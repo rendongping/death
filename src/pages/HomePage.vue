@@ -76,6 +76,11 @@
           <h3 class="nav-card__title">诗与艺术</h3>
           <p class="nav-card__desc">以文字和艺术触碰生命的本质</p>
         </router-link>
+        <router-link to="/ways-to-die" class="nav-card nav-card--ways card-hover">
+          <span class="nav-card__icon">🌙</span>
+          <h3 class="nav-card__title">一万种死法</h3>
+          <p class="nav-card__desc">认识死亡的方式，是为了更好地活</p>
+        </router-link>
         <router-link to="/practices" class="nav-card nav-card--practices card-hover">
           <span class="nav-card__icon">🧘</span>
           <h3 class="nav-card__title">练习</h3>
@@ -267,6 +272,7 @@ const greeting = computed(() => {
 .nav-card--bucketlist { border-left-color: var(--color-sage); }
 .nav-card--letters { border-left-color: var(--color-dusty-rose); }
 .nav-card--poetry { border-left-color: var(--color-dusty-rose-light); }
+.nav-card--ways { border-left-color: var(--color-dusty-rose); }
 .nav-card--practices { border-left-color: var(--color-sage-light); }
 .nav-card--stories { border-left-color: var(--color-warm-taupe); }
 .nav-card--memorial { border-left-color: var(--color-dusty-rose); }

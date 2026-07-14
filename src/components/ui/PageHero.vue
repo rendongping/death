@@ -100,6 +100,14 @@ function particleStyle(i) {
     linear-gradient(180deg, var(--color-cream) 0%, var(--color-warm-white) 100%);
 }
 
+.page-hero--rose {
+  background:
+    radial-gradient(ellipse at 20% 25%, rgba(196, 146, 158, 0.20), transparent 55%),
+    radial-gradient(ellipse at 80% 20%, rgba(194, 149, 107, 0.12), transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(139, 125, 107, 0.12), transparent 60%),
+    linear-gradient(180deg, var(--color-cream) 0%, var(--color-warm-white) 100%);
+}
+
 .hero-inner {
   position: relative;
   z-index: 2;
@@ -117,6 +125,8 @@ function particleStyle(i) {
 
 .page-hero--sage .hero-eyebrow { color: var(--color-sage); }
 .page-hero--taupe .hero-eyebrow { color: var(--color-warm-taupe); }
+.page-hero--rose .hero-eyebrow { color: var(--color-dusty-rose); }
+.page-hero--rose .hero-title { color: var(--color-dusty-rose); }
 
 .hero-title {
   font-family: var(--font-heading);
