@@ -78,6 +78,8 @@ watch(() => route.params.slug, load)
 
 .article-header {
   margin-bottom: var(--space-2xl);
+  text-align: center;
+  animation: fade-up 0.8s ease both;
 }
 
 .article-hero {
@@ -92,6 +94,7 @@ watch(() => route.params.slug, load)
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: saturate(0.92);
 }
 
 .article-hero__illustration {
@@ -103,14 +106,17 @@ watch(() => route.params.slug, load)
 }
 
 .article-title {
+  font-family: var(--font-heading);
   font-size: var(--text-4xl);
   color: var(--color-gold-dark);
   margin-bottom: var(--space-md);
+  line-height: 1.4;
 }
 
 .article-meta {
   display: flex;
   gap: var(--space-md);
+  justify-content: center;
   font-size: var(--text-sm);
   color: var(--color-text-lighter);
 }
@@ -121,5 +127,70 @@ watch(() => route.params.slug, load)
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
   color: var(--color-warm-taupe);
+}
+
+.article-content {
+  font-size: var(--text-lg);
+  line-height: 1.85;
+  color: var(--color-text);
+}
+
+.article-content :deep(h2) {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--color-text);
+  margin-top: var(--space-2xl);
+  margin-bottom: var(--space-md);
+}
+
+.article-content :deep(h3) {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--color-gold-dark);
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-sm);
+}
+
+.article-content :deep(p) {
+  margin-bottom: var(--space-md);
+}
+
+.article-content :deep(ul),
+.article-content :deep(ol) {
+  padding-left: var(--space-xl);
+  margin-bottom: var(--space-md);
+}
+
+.article-content :deep(li) {
+  margin-bottom: var(--space-sm);
+}
+
+.article-content :deep(strong) {
+  color: var(--color-gold-dark);
+}
+
+.article-content :deep(blockquote) {
+  border-left: 3px solid var(--color-gold);
+  padding: var(--space-sm) var(--space-lg);
+  margin: var(--space-xl) 0;
+  color: var(--color-text-light);
+  font-style: italic;
+  background: var(--color-cream);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.article-content :deep(hr) {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-2xl) 0;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .article-header { animation: none; }
 }
 </style>

@@ -78,6 +78,8 @@ watch(() => route.params.slug, load)
 
 .story-header {
   margin-bottom: var(--space-2xl);
+  text-align: center;
+  animation: fade-up 0.8s ease both;
 }
 
 .story-hero {
@@ -92,6 +94,7 @@ watch(() => route.params.slug, load)
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: saturate(0.92);
 }
 
 .story-hero__illustration {
@@ -105,6 +108,7 @@ watch(() => route.params.slug, load)
 .story-meta {
   display: flex;
   gap: var(--space-md);
+  justify-content: center;
   margin-bottom: var(--space-md);
   font-size: var(--text-sm);
 }
@@ -121,8 +125,10 @@ watch(() => route.params.slug, load)
 }
 
 .story-title {
+  font-family: var(--font-heading);
   font-size: var(--text-4xl);
   color: var(--color-gold-dark);
+  line-height: 1.4;
 }
 
 .story-content {
@@ -167,15 +173,26 @@ watch(() => route.params.slug, load)
 
 .story-content :deep(blockquote) {
   border-left: 3px solid var(--color-gold);
-  padding-left: var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
   margin: var(--space-xl) 0;
   color: var(--color-text-light);
   font-style: italic;
+  background: var(--color-cream);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .story-content :deep(hr) {
   border: none;
   border-top: 1px solid var(--color-border);
   margin: var(--space-2xl) 0;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-header { animation: none; }
 }
 </style>

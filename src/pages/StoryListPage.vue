@@ -1,7 +1,13 @@
 <template>
   <div class="story-list-page">
-    <h1 class="page-title">生命故事</h1>
-    <p class="page-subtitle">真实与虚构交织的生命片段，让我们在别人的故事里看见自己</p>
+    <PageHero
+      eyebrow="STORIES OF LIVES"
+      title="生命故事 · 在人间"
+      subtitle="真实与虚构交织的生命片段。在别人的故事里，我们悄悄看见自己。"
+      :stats="heroStats"
+      particle="petal"
+      tone="taupe"
+    />
 
     <div v-if="loading" class="loading">正在加载故事...</div>
     <div v-else-if="stories.length === 0" class="empty">
@@ -13,13 +19,14 @@
     </div>
     <div v-else class="stories-grid">
       <router-link
-        v-for="story in stories"
+        v-for="(story, i) in stories"
         :key="story.slug"
         :to="`/stories/${story.slug}`"
-        class="story-card card-hover"
+        class="story-card"
+        :style="{ animationDelay: `${Math.min(i, 12) * 50}ms` }"
       >
         <div class="story-media">
-          <img v-if="story.image" :src="story.image" :alt="story.title" class="story-image" />
+          <img v-if="story.image" :src="story.image" :alt="story.title" class="story-image" loading="lazy" />
           <Illustration v-else name="stories" :width="120" :height="80" />
         </div>
         <div class="story-body">
@@ -37,13 +44,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import Illustration from '@/components/ui/Illustration.vue'
+import PageHero from '@/components/ui/PageHero.vue'
 import { useContent } from '@/composables/useContent'
 
 const stories = ref([])
 const loading = ref(true)
+
+const heroStats = computed(() => [
+  { num: stories.value.length, label: '个故事' },
+  { label: '真实与虚构' },
+  { label: '从史铁生到小王子' }
+])
 
 onMounted(async () => {
   const { loadAllStories } = useContent()
@@ -53,18 +67,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.page-title {
-  font-size: var(--text-4xl);
-  color: var(--color-gold-dark);
-  margin-bottom: var(--space-sm);
-}
-
-.page-subtitle {
-  color: var(--color-text-light);
-  font-size: var(--text-lg);
-  margin-bottom: var(--space-2xl);
-}
-
 .loading {
   text-align: center;
   color: var(--color-text-lighter);
@@ -74,7 +76,7 @@ onMounted(async () => {
 .stories-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--space-lg);
+  gap: var(--space-xl);
 }
 
 .story-card {
@@ -84,17 +86,19 @@ onMounted(async () => {
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-warm-taupe);
   box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
   overflow: hidden;
+  text-decoration: none;
+  animation: fade-up 0.6s ease both;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .story-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
 
 .story-media {
-  height: 140px;
+  height: 150px;
   background: var(--color-cream);
   display: flex;
   align-items: center;
@@ -106,11 +110,12 @@ onMounted(async () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--transition-base);
+  filter: saturate(0.92);
+  transition: transform 0.6s ease;
 }
 
 .story-card:hover .story-image {
-  transform: scale(1.03);
+  transform: scale(1.05);
 }
 
 .story-body {
@@ -132,6 +137,7 @@ onMounted(async () => {
   background: rgba(139, 125, 107, 0.12);
   color: var(--color-warm-taupe);
   border-radius: var(--radius-full);
+  letter-spacing: 0.08em;
 }
 
 .story-date {
@@ -143,19 +149,38 @@ onMounted(async () => {
   font-size: var(--text-xl);
   color: var(--color-text);
   margin-bottom: var(--space-sm);
+  line-height: 1.45;
 }
 
 .story-excerpt {
   flex: 1;
   font-size: var(--text-sm);
   color: var(--color-text-light);
-  line-height: 1.6;
+  line-height: 1.75;
   margin-bottom: var(--space-md);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .story-link {
   font-size: var(--text-sm);
   color: var(--color-warm-taupe);
   font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-card { animation: none; }
+}
+
+@media (max-width: 768px) {
+  .stories-grid { grid-template-columns: 1fr; }
 }
 </style>
