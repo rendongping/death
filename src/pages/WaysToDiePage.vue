@@ -18,6 +18,43 @@
       </div>
     </section>
 
+    <!-- Intro: definition & analysis -->
+    <section v-if="!loading && intro" class="intro-section">
+      <blockquote class="intro-quote">
+        <p>「{{ intro.quote.text }}」</p>
+        <cite>—— {{ intro.quote.author }}</cite>
+      </blockquote>
+
+      <div class="intro-block">
+        <h2 class="intro-title">{{ intro.definition.title }}</h2>
+        <p v-for="(p, i) in intro.definition.paragraphs" :key="i" class="intro-text">{{ p }}</p>
+        <div class="intro-types">
+          <div v-for="t in intro.definition.types" :key="t.name" class="intro-type-card">
+            <h3>{{ t.name }}</h3>
+            <p>{{ t.desc }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="intro-block">
+        <h2 class="intro-title">{{ intro.analysis.title }}</h2>
+        <div class="intro-analysis-list">
+          <div v-for="s in intro.analysis.sections" :key="s.heading" class="intro-analysis-item">
+            <h3>{{ s.heading }}</h3>
+            <p>{{ s.content }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="intro-stats">
+        <div v-for="stat in intro.statistics" :key="stat.label" class="intro-stat">
+          <span class="intro-stat-value">{{ stat.value }}</span>
+          <span class="intro-stat-label">{{ stat.label }}</span>
+          <span class="intro-stat-note">{{ stat.note }}</span>
+        </div>
+      </div>
+    </section>
+
     <div v-if="loading" class="loading">正在加载...</div>
 
     <template v-else>
@@ -129,6 +166,16 @@
               <span class="prevention-title">如何远离这种死法</span>
               <p>{{ activeEntry.prevention }}</p>
             </div>
+
+            <div v-if="activeEntry.story" class="modal-story">
+              <span class="story-title">真实故事：{{ activeEntry.story.title }}</span>
+              <div class="story-meta">
+                <span v-if="activeEntry.story.person">{{ activeEntry.story.person }}</span>
+                <span v-if="activeEntry.story.year">· {{ activeEntry.story.year }}</span>
+                <span v-if="activeEntry.story.place">· {{ activeEntry.story.place }}</span>
+              </div>
+              <p>{{ activeEntry.story.summary }}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -158,6 +205,7 @@ onMounted(async () => {
 
 const categories = computed(() => data.value?.categories || [])
 const entries = computed(() => data.value?.entries || [])
+const intro = computed(() => data.value?.intro || null)
 const total = computed(() => entries.value.length)
 
 function countByCategory(key) {
@@ -575,8 +623,170 @@ function closeEntry() {
   .way-card { animation: none; }
 }
 
+/* ── Intro section ── */
+.intro-section {
+  margin-bottom: var(--space-3xl);
+}
+
+.intro-quote {
+  margin: 0 0 var(--space-2xl);
+  padding: var(--space-xl) var(--space-2xl);
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(196, 146, 158, 0.12), transparent 50%),
+    var(--color-warm-white);
+  border-left: 4px solid var(--color-dusty-rose);
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  color: var(--color-text);
+}
+
+.intro-quote p {
+  font-size: var(--text-xl);
+  line-height: 1.7;
+  margin-bottom: var(--space-md);
+}
+
+.intro-quote cite {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--color-text-light);
+  font-style: normal;
+}
+
+.intro-block {
+  background: var(--color-warm-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl) var(--space-2xl);
+  margin-bottom: var(--space-xl);
+}
+
+.intro-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--color-text);
+  margin-bottom: var(--space-lg);
+}
+
+.intro-text {
+  color: var(--color-text-light);
+  line-height: 1.85;
+  margin-bottom: var(--space-md);
+}
+
+.intro-types {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+.intro-type-card {
+  background: var(--color-cream);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+}
+
+.intro-type-card h3 {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  color: var(--color-dusty-rose);
+  margin-bottom: var(--space-xs);
+}
+
+.intro-type-card p {
+  font-size: var(--text-sm);
+  color: var(--color-text-light);
+  line-height: 1.7;
+}
+
+.intro-analysis-list {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.intro-analysis-item h3 {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--color-gold-dark);
+  margin-bottom: var(--space-xs);
+}
+
+.intro-analysis-item p {
+  color: var(--color-text-light);
+  line-height: 1.85;
+}
+
+.intro-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-md);
+}
+
+.intro-stat {
+  background: var(--color-warm-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  text-align: center;
+}
+
+.intro-stat-value {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--color-dusty-rose);
+  margin-bottom: var(--space-xs);
+}
+
+.intro-stat-label {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+.intro-stat-note {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--color-text-lighter);
+  line-height: 1.5;
+}
+
+/* ── Modal story ── */
+.modal-story {
+  margin-top: var(--space-xl);
+  background: rgba(196, 149, 107, 0.1);
+  border-left: 3px solid var(--color-gold);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: var(--space-md) var(--space-lg);
+}
+
+.story-title {
+  display: block;
+  font-weight: 600;
+  color: var(--color-gold-dark);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-xs);
+  letter-spacing: 0.1em;
+}
+
+.story-meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-lighter);
+  margin-bottom: var(--space-sm);
+}
+
+.modal-story p {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.8;
+}
+
 @media (max-width: 768px) {
   .cards-grid { grid-template-columns: 1fr; }
   .closing-actions { flex-direction: column; align-items: center; }
+  .intro-quote p { font-size: var(--text-lg); }
+  .intro-block { padding: var(--space-lg); }
 }
 </style>
