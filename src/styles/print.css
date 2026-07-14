@@ -1,0 +1,75 @@
+/* ========================================
+   打印样式
+   适用于文章和信件页面
+   ======================================== */
+
+@media print {
+  /* 隐藏导航和页脚 */
+  .app-header,
+  .app-footer,
+  .mobile-menu-btn,
+  .mobile-nav {
+    display: none !important;
+  }
+
+  .app-main {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* 重置颜色为黑白的 */
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 12pt;
+  }
+
+  .article-content,
+  .letter-view-body {
+    max-width: 100% !important;
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+
+  .article-content h1,
+  .article-content h2,
+  .article-content h3,
+  .article-title,
+  .page-title {
+    color: #000 !important;
+  }
+
+  .article-content a {
+    color: #000 !important;
+    text-decoration: underline;
+  }
+
+  .article-content blockquote {
+    border-left: 2px solid #999 !important;
+    background: none !important;
+    color: #333 !important;
+  }
+
+  /* 隐藏互动元素 */
+  .warm-btn,
+  .add-form,
+  .item-check,
+  .item-delete,
+  .letter-delete,
+  .modal-overlay,
+  .prompt-actions,
+  .nav-cards,
+  .back-link,
+  .reset-row {
+    display: none !important;
+  }
+
+  /* 确保不分页到奇怪位置 */
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+  }
+
+  article, section {
+    page-break-inside: avoid;
+  }
+}
