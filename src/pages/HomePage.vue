@@ -28,17 +28,18 @@
     <section class="today-section">
       <h2 class="section-title">今日凝视</h2>
       <div class="today-grid">
-        <router-link :to="todayArticle.link" class="today-card today-card--article">
+        <router-link :to="todayArticle.link" class="today-card today-card--article" @click="setLastRead('article', todayArticle.slug, todayArticle.title)">
           <span class="today-label">读一篇文章</span>
           <h3>{{ todayArticle.title }}</h3>
           <p>{{ todayArticle.excerpt }}</p>
         </router-link>
         <router-link :to="todayPoem.link" class="today-card today-card--poem">
-          <span class="today-label">读一首诗</span>
+          <span class="today-label">今日诗签</span>
           <h3>{{ todayPoem.title }}</h3>
-          <p>{{ todayPoem.author }}</p>
+          <p v-if="todayPoem.highlight" class="today-poem-highlight">「{{ todayPoem.highlight }}」</p>
+          <p v-else>{{ todayPoem.author }}</p>
         </router-link>
-        <router-link :to="todayStory.link" class="today-card today-card--story">
+        <router-link :to="todayStory.link" class="today-card today-card--story" @click="setLastRead('story', todayStory.slug, todayStory.title)">
           <span class="today-label">读一个故事</span>
           <h3>{{ todayStory.title }}</h3>
           <p>{{ todayStory.excerpt }}</p>
@@ -51,10 +52,45 @@
       </div>
     </section>
 
+    <!-- 生命档案 -->
+    <section v-if="!hasProfile" class="profile-section">
+      <div class="profile-card">
+        <h2 class="section-title">建立你的生命档案</h2>
+        <p class="profile-desc">填写后，首页会为你推荐更贴近的内容。所有信息只保存在你的设备上。</p>
+        <div class="profile-form">
+          <input v-model="profileForm.name" placeholder="怎么称呼你？" class="profile-input" />
+          <div class="focus-tags">
+            <button
+              v-for="t in focusOptions"
+              :key="t.value"
+              class="focus-tag"
+              :class="{ active: profileForm.focus.includes(t.value) }"
+              @click="toggleFocus(t.value)"
+            >{{ t.label }}</button>
+          </div>
+          <button class="warm-btn warm-btn--primary" @click="saveProfile">开始我的旅程</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 继续上次旅程 -->
+    <section v-if="lastRead" class="last-read-section">
+      <router-link :to="lastRead.link" class="last-read-card">
+        <span class="last-read-label">继续上次</span>
+        <span class="last-read-title">{{ lastRead.title }}</span>
+        <span class="last-read-arrow">→</span>
+      </router-link>
+    </section>
+
     <!-- 你的生命之旅 -->
     <section class="journey-section">
       <div class="journey-card">
-        <h2 class="section-title">你的生命之旅</h2>
+        <div class="journey-header">
+          <h2 class="section-title">你的生命之旅</h2>
+          <div v-if="badges.length" class="badges">
+            <span v-for="b in badges" :key="b" class="badge">{{ badgeLabel(b) }}</span>
+          </div>
+        </div>
         <div class="journey-progress">
           <div class="journey-bar">
             <div class="journey-fill" :style="{ width: journeyProgress + '%' }"></div>
@@ -80,6 +116,13 @@
           </router-link>
         </div>
         <p class="journey-hint">每一小步，都是向死而生的练习。</p>
+        <div class="journey-backup">
+          <button class="backup-btn" @click="exportData">导出我的数据</button>
+          <label class="backup-btn">
+            导入数据
+            <input type="file" accept="application/json" hidden @change="importData" />
+          </label>
+        </div>
       </div>
     </section>
 
@@ -127,12 +170,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useContent } from '@/composables/useContent'
 import { useBucketlistStore } from '@/stores/bucketlist'
 import { useLettersStore } from '@/stores/letters'
 import { useReflectionsStore } from '@/stores/reflections'
 import { loadJSON } from '@/utils/storage'
+import { useProfileStore } from '@/stores/profile'
+import { downloadBackup, importBackup } from '@/utils/backup'
 
 
 const articles = ref([])
@@ -179,6 +224,7 @@ const todayArticle = computed(() => {
   const a = articles.value[idx]
   return {
     title: a.title,
+    slug: a.slug,
     excerpt: a.excerpt ? a.excerpt.slice(0, 60) + '…' : '',
     link: `/articles/${a.slug}`
   }
@@ -188,7 +234,7 @@ const todayPoem = computed(() => {
   if (!poems.value.length) return { title: '加载中…', author: '', link: '/poetry' }
   const idx = dayOfYear() % poems.value.length
   const p = poems.value[idx]
-  return { title: p.title, author: p.author, link: '/poetry' }
+  return { title: p.title, author: p.author, highlight: p.highlight || '', link: '/poetry' }
 })
 
 const todayStory = computed(() => {
@@ -197,6 +243,7 @@ const todayStory = computed(() => {
   const s = stories.value[idx]
   return {
     title: s.title,
+    slug: s.slug,
     excerpt: s.excerpt ? s.excerpt.slice(0, 60) + '…' : '',
     link: `/stories/${s.slug}`
   }
@@ -214,6 +261,65 @@ const todayGaze = computed(() => todayArticle.value)
 const bucketlistStore = useBucketlistStore()
 const lettersStore = useLettersStore()
 const reflectionsStore = useReflectionsStore()
+const profileStore = useProfileStore()
+
+const profileForm = ref({ name: '', focus: [] })
+const focusOptions = [
+  { value: 'farewell', label: '告别与哀伤' },
+  { value: 'meaning', label: '生命意义' },
+  { value: 'relationship', label: '关系与爱' },
+  { value: 'career', label: '事业与遗产' }
+]
+
+const hasProfile = computed(() => profileStore.hasProfile)
+const lastRead = computed(() => profileStore.profile.lastRead)
+const badges = computed(() => profileStore.profile.badges || [])
+
+function toggleFocus(value) {
+  const idx = profileForm.value.focus.indexOf(value)
+  if (idx >= 0) profileForm.value.focus.splice(idx, 1)
+  else profileForm.value.focus.push(value)
+}
+
+function saveProfile() {
+  profileStore.setProfile({
+    name: profileForm.value.name,
+    focus: profileForm.value.focus
+  })
+}
+
+function setLastRead(type, slug, title) {
+  const linkMap = {
+    article: `/articles/${slug}`,
+    story: `/stories/${slug}`,
+    poem: '/poetry'
+  }
+  profileStore.setLastRead({ type, slug, title, link: linkMap[type] || '/' })
+}
+
+async function exportData() {
+  downloadBackup()
+}
+
+async function importData(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  try {
+    await importBackup(file)
+    window.location.reload()
+  } catch (e) {
+    alert('导入失败：文件格式不正确')
+  }
+}
+
+function badgeLabel(badge) {
+  const map = {
+    '觉知者': '🌅 觉知者',
+    '整理者': '🧘 整理者',
+    '告别者': '🌙 告别者'
+  }
+  return map[badge] || badge
+}
 
 const journey = computed(() => {
   const savedDirectives = loadJSON('mv-advance-directives', {})
@@ -229,6 +335,12 @@ const journeyProgress = computed(() => {
   const done = Object.values(journey.value).filter(Boolean).length
   return Math.round((done / 4) * 100)
 })
+
+watch(journeyProgress, (val) => {
+  if (val >= 25) profileStore.addBadge('觉知者')
+  if (val >= 50) profileStore.addBadge('整理者')
+  if (val >= 100) profileStore.addBadge('告别者')
+}, { immediate: true })
 
 function seedStyle(i) {
   const angle = (i * 30) * Math.PI / 180
@@ -458,8 +570,125 @@ onMounted(async () => {
   line-height: 1.7;
 }
 
+.today-poem-highlight {
+  font-family: var(--font-elegant);
+  color: var(--color-ink) !important;
+  font-style: italic;
+}
+
+/* 生命档案 */
+.profile-section { margin: var(--space-3xl) 0; }
+
+.profile-card {
+  background: var(--color-warm-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl);
+}
+
+.profile-desc {
+  color: var(--color-text-light);
+  margin-bottom: var(--space-lg);
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.profile-input {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-base);
+}
+
+.focus-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.focus-tag {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-cream);
+  color: var(--color-text-light);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.focus-tag.active {
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: #fff;
+}
+
+/* 继续上次 */
+.last-read-section { margin: var(--space-xl) 0; }
+
+.last-read-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(194, 149, 107, 0.1);
+  border: 1px solid var(--color-gold-light);
+  border-radius: var(--radius-md);
+  color: var(--color-gold-dark);
+  transition: all var(--transition-base);
+}
+
+.last-read-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.last-read-label {
+  font-size: var(--text-xs);
+  background: var(--color-gold);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.last-read-title {
+  flex: 1;
+  font-size: var(--text-base);
+}
+
+.last-read-arrow { font-size: var(--text-lg); }
+
 /* 生命之旅 */
 .journey-section { margin: var(--space-3xl) 0; }
+
+.journey-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.journey-header .section-title { margin-bottom: 0; }
+
+.badges {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(139, 157, 131, 0.15);
+  color: var(--color-sage);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+}
 
 .journey-card {
   background: var(--color-warm-white);
@@ -529,6 +758,29 @@ onMounted(async () => {
   font-size: var(--text-sm);
   color: var(--color-text-lighter);
   text-align: center;
+}
+
+.journey-backup {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+.backup-btn {
+  padding: var(--space-sm) var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-warm-white);
+  color: var(--color-text-light);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.backup-btn:hover {
+  border-color: var(--color-gold);
+  color: var(--color-gold-dark);
 }
 
 /* 四幕剧 */

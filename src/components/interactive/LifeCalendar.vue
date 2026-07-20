@@ -115,6 +115,7 @@
       </Transition>
 
       <div class="reset-row">
+        <WarmButton variant="ghost" @click="exportLifeMap">导出人生地图</WarmButton>
         <WarmButton variant="ghost" @click="resetBirthdate">重新设置生日</WarmButton>
       </div>
     </div>
@@ -126,6 +127,7 @@ import { ref, computed, watch } from 'vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
 import { loadJSON, saveJSON } from '@/utils/storage'
+import { downloadDataUrl } from '@/utils/shareImage'
 
 const STORAGE_KEY = 'mv-birthdate'
 const NOTES_KEY = 'mv-week-notes'
@@ -229,6 +231,71 @@ const pendingBucketItems = computed(() => {
 function saveBirthdate() {
   birthdate.value = birthdateInput.value
   localStorage.setItem(STORAGE_KEY, birthdateInput.value)
+}
+
+function exportLifeMap() {
+  const cell = 16
+  const gap = 2
+  const cols = 52
+  const rows = LIFE_EXPECTANCY
+  const padding = 80
+  const headerHeight = 120
+  const footerHeight = 80
+  const width = padding * 2 + cols * (cell + gap)
+  const height = headerHeight + footerHeight + rows * (cell + gap)
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+
+  // 背景
+  ctx.fillStyle = '#FFF8F0'
+  ctx.fillRect(0, 0, width, height)
+
+  // 标题
+  ctx.fillStyle = '#3C3228'
+  ctx.font = 'bold 32px "Noto Serif SC", serif'
+  ctx.textAlign = 'center'
+  ctx.fillText('我的人生地图', width / 2, 48)
+  ctx.font = '18px "Noto Serif SC", serif'
+  ctx.fillStyle = '#8B7D6B'
+  ctx.fillText(`已走过 ${livedWeeks.value} 周 · 大约还剩 ${remainingWeeks.value} 周`, width / 2, 84)
+
+  // 网格
+  const startX = padding
+  const startY = headerHeight
+  for (let i = 0; i < totalWeeks.value; i++) {
+    const week = calendarWeeks.value[i]
+    if (!week) continue
+    const col = i % cols
+    const row = Math.floor(i / cols)
+    const x = startX + col * (cell + gap)
+    const y = startY + row * (cell + gap)
+
+    if (week.current) {
+      ctx.fillStyle = '#C4929E'
+    } else if (week.lived) {
+      const year = Math.floor(i / 52)
+      const season = seasons.find(s => year >= s.start && year <= s.end) || seasons[seasons.length - 1]
+      ctx.fillStyle = season.color
+    } else {
+      ctx.fillStyle = '#F0E8DD'
+    }
+    ctx.fillRect(x, y, cell, cell)
+
+    if (week.note) {
+      ctx.fillStyle = '#3C3228'
+      ctx.fillRect(x + cell / 2 - 1, y + cell / 2 - 1, 2, 2)
+    }
+  }
+
+  // 底部
+  ctx.fillStyle = '#B5A99A'
+  ctx.font = '16px "Noto Serif SC", serif'
+  ctx.fillText('Memento Vivere · 每一格都是一个星期', width / 2, height - 32)
+
+  downloadDataUrl(canvas.toDataURL('image/png'), 'life-map.png')
 }
 
 function resetBirthdate() {

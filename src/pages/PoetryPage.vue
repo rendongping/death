@@ -145,7 +145,7 @@
             class="modal-cover"
             :style="{ backgroundImage: `url(${(activePoemMeta && activePoemMeta.image) || fallbackCover})` }"
           ></div>
-          <div class="modal-body">
+          <div class="modal-body ink-reveal">
             <p class="modal-category">{{ categoryLabel(activePoem.metadata.category) }} · 精读赏析</p>
             <h2 class="modal-title">{{ activePoem.metadata.title }}</h2>
             <p class="modal-meta">
@@ -157,6 +157,7 @@
               「{{ activePoem.metadata.highlight }}」
             </p>
             <div class="modal-html" v-html="activePoem.html"></div>
+            <button class="share-btn" @click="shareMdPoem">📜 抄一句带走</button>
           </div>
         </div>
       </div>
@@ -174,6 +175,7 @@
             <div class="archive-content">
               <p v-for="(line, li) in activeArchive.content" :key="li">{{ line }}</p>
             </div>
+            <button class="share-btn" @click="shareArchivePoem">📜 抄一句带走</button>
           </div>
         </div>
       </div>
@@ -182,9 +184,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { useContent } from '@/composables/useContent'
+import { generatePoemCard, downloadDataUrl } from '@/utils/shareImage'
 
 const PAGE_SIZE = 48
 
@@ -333,18 +336,58 @@ async function openMdPoem(slug) {
     activePoemMeta.value = mdPoems.value.find(p => p.slug === slug)
     activePoem.value = item
     document.body.style.overflow = 'hidden'
+    await nextTick()
+    revealInk()
   }
 }
 
 function openArchivePoem(poem) {
   activeArchive.value = poem
   document.body.style.overflow = 'hidden'
+  nextTick(() => revealInk('archive'))
 }
 
 function closePoem() {
   activePoem.value = null
   activePoemMeta.value = null
   document.body.style.overflow = ''
+}
+
+function revealInk(type = 'md') {
+  const selector = type === 'archive' ? '.modal-body--plain .archive-content p' : '.modal-body.ink-reveal p'
+  const ps = document.querySelectorAll(selector)
+  ps.forEach((p, i) => {
+    p.style.animationDelay = `${i * 0.08}s`
+  })
+}
+
+function shareMdPoem() {
+  if (!activePoem.value) return
+  const meta = activePoem.value.metadata || {}
+  const text = meta.highlight || extractFirstLines(activePoem.value.rawContent, 4)
+  const dataUrl = generatePoemCard({
+    title: meta.title || '一首诗',
+    author: meta.author || '佚名',
+    text
+  })
+  downloadDataUrl(dataUrl, `${meta.title || 'poem'}.png`)
+}
+
+function shareArchivePoem() {
+  if (!activeArchive.value) return
+  const poem = activeArchive.value
+  const text = poem.content.slice(0, 4).join('，')
+  const dataUrl = generatePoemCard({
+    title: poem.title,
+    author: poem.author,
+    text
+  })
+  downloadDataUrl(dataUrl, `${poem.title}.png`)
+}
+
+function extractFirstLines(raw, n = 4) {
+  if (!raw) return ''
+  return raw.split('\n').filter(l => l.trim() && !l.startsWith('#')).slice(0, n).join('，')
 }
 
 function closeArchive() {
@@ -863,6 +906,45 @@ onMounted(async () => {
 
 .modal-body {
   padding: var(--space-2xl) var(--space-xl);
+}
+
+.modal-body.ink-reveal :deep(p) {
+  animation: ink-fade 0.7s ease both;
+}
+
+.modal-body--plain .archive-content p {
+  animation: ink-fade 0.7s ease both;
+}
+
+@keyframes ink-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.share-btn {
+  margin-top: var(--space-xl);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-gold);
+  background: var(--color-warm-white);
+  color: var(--color-gold-dark);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.share-btn:hover {
+  background: var(--color-gold);
+  color: #fff;
+  transform: translateY(-1px);
 }
 
 .modal-body--plain { padding-top: var(--space-3xl); }
