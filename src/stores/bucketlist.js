@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { loadJSON, saveJSON } from '@/utils/storage'
 
 export const useBucketlistStore = defineStore('bucketlist', () => {
   const STORAGE_KEY = 'mv-bucketlist'
-  const items = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'))
+  const items = ref(loadJSON(STORAGE_KEY, []))
 
   const pendingItems = computed(() =>
     items.value.filter(i => !i.done).sort((a, b) => b.createdAt - a.createdAt)
@@ -19,7 +20,7 @@ export const useBucketlistStore = defineStore('bucketlist', () => {
   })
 
   function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items.value))
+    saveJSON(STORAGE_KEY, items.value)
   }
 
   function addItem(title, note = '') {

@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { loadJSON, saveJSON } from '@/utils/storage'
 
 export const useReflectionsStore = defineStore('reflections', () => {
   const STORAGE_KEY = 'mv-reflections'
-  const reflections = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'))
+  const reflections = ref(loadJSON(STORAGE_KEY, {}))
 
   const todayKey = computed(() => {
     const d = new Date()
@@ -21,7 +22,7 @@ export const useReflectionsStore = defineStore('reflections', () => {
   })
 
   function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(reflections.value))
+    saveJSON(STORAGE_KEY, reflections.value)
   }
 
   function saveEntry(text) {

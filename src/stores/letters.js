@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { loadJSON, saveJSON } from '@/utils/storage'
 
 export const useLettersStore = defineStore('letters', () => {
   const STORAGE_KEY = 'mv-letters'
-  const letters = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'))
+  const letters = ref(loadJSON(STORAGE_KEY, []))
 
   const sortedLetters = computed(() =>
     [...letters.value].sort((a, b) => b.createdAt - a.createdAt)
@@ -18,7 +19,7 @@ export const useLettersStore = defineStore('letters', () => {
   )
 
   function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(letters.value))
+    saveJSON(STORAGE_KEY, letters.value)
   }
 
   function addLetter({ to, subject, body, deliverAt }) {

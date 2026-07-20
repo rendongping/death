@@ -48,6 +48,9 @@ async function load() {
     difficulty.value = result.metadata.difficulty || ''
     image.value = result.metadata.image || ''
     html.value = result.html
+    if (title.value) {
+      document.title = `${title.value} — Memento Vivere`
+    }
   }
   loading.value = false
 }

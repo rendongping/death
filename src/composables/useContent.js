@@ -1,11 +1,5 @@
 import { ref } from 'vue'
-import { marked } from 'marked'
-
-// 配置 marked
-marked.setOptions({
-  breaks: true,
-  gfm: true
-})
+import { renderMarkdown } from '@/utils/markdown'
 
 /**
  * 内容加载引擎
@@ -121,7 +115,7 @@ export function useContent() {
       const [path, loader] = match
       const raw = await loader()
       const { metadata, content } = parseFrontmatter(raw)
-      const html = marked(content)
+      const html = renderMarkdown(content)
 
       return {
         slug: getSlugFromPath(path, prefix),

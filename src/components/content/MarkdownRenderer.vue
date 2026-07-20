@@ -7,23 +7,14 @@
 
 <script setup>
 import { computed } from 'vue'
-import { marked } from 'marked'
+import { renderMarkdown } from '@/utils/markdown'
 
 const props = defineProps({
   content: { type: String, default: '' },
   metadata: { type: Object, default: () => ({}) }
 })
 
-// 配置 marked
-marked.setOptions({
-  breaks: true,
-  gfm: true
-})
-
-const renderedHtml = computed(() => {
-  if (!props.content) return ''
-  return marked(props.content)
-})
+const renderedHtml = computed(() => renderMarkdown(props.content))
 </script>
 
 <style scoped>
