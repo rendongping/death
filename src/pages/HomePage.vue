@@ -1,189 +1,327 @@
 <template>
   <div class="home-page">
-    <!-- Hero 区域 -->
+    <!-- 第一幕：今日仪式 -->
     <section class="hero">
+      <div class="hero__glow"></div>
       <div class="hero__content">
-        <p class="hero__greeting">{{ greeting }}</p>
+        <p class="hero__greeting">{{ greeting }} · {{ dateText }}</p>
         <h1 class="hero__title">Memento Vivere</h1>
         <p class="hero__subtitle">记住要活着</p>
-        <p class="hero__desc">
-          死亡不是生命的对立面，而是生命的一部分。<br />
-          当我们正视死亡，才能更深刻地理解活着的意义。
-        </p>
+        <p class="hero__quote">「{{ todayQuote.text }}」</p>
+        <p class="hero__quote-author">—— {{ todayQuote.author }}</p>
         <div class="hero__actions">
-          <router-link to="/calendar" class="warm-btn warm-btn--primary">探索生命日历</router-link>
-          <router-link to="/articles" class="warm-btn warm-btn--secondary">阅读文章</router-link>
+          <router-link :to="todayGaze.link" class="warm-btn warm-btn--primary">开始今日凝视</router-link>
+          <router-link to="/about" class="warm-btn warm-btn--secondary">了解四幕剧</router-link>
         </div>
       </div>
       <div class="hero__visual">
-        <!-- 蒲公英 SVG -->
-        <svg viewBox="0 0 200 240" class="hero__illustration" xmlns="http://www.w3.org/2000/svg">
-          <g opacity="0.7">
-            <line x1="100" y1="180" x2="100" y2="100" stroke="#C2956B" stroke-width="1.5" stroke-linecap="round"/>
-            <circle cx="100" cy="85" r="2" fill="#C2956B"/>
-            <!-- 种子飘散 -->
-            <g v-for="i in 8" :key="i" :transform="`rotate(${i * 45 - 20}, 100, 85)`">
-              <line x1="100" y1="85" x2="100" y2="55" stroke="#D4B08C" stroke-width="0.8" stroke-linecap="round">
-                <animate attributeName="y2" values="55;65;55" dur="3s" repeatCount="indefinite"/>
-              </line>
-              <line x1="100" y1="55" x2="92" y2="48" stroke="#D4B08C" stroke-width="0.5" stroke-linecap="round"/>
-              <line x1="100" y1="55" x2="108" y2="48" stroke="#D4B08C" stroke-width="0.5" stroke-linecap="round"/>
-              <circle cx="100" cy="55" r="1.5" fill="#D4B08C" opacity="0.6">
-                <animate attributeName="opacity" values="0.6;0.2;0.6" dur="3s" repeatCount="indefinite"/>
-              </circle>
-            </g>
-          </g>
-        </svg>
+        <div class="dandelion">
+          <div class="dandelion__stem"></div>
+          <div class="dandelion__seeds">
+            <span v-for="i in 12" :key="i" class="dandelion__seed" :style="seedStyle(i)"></span>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- 每日反思 -->
-    <section class="daily-section">
-      <DailyPrompt />
-    </section>
-
-    <!-- 感恩时刻 -->
-    <section class="gratitude-section">
-      <GratitudeMoments />
-    </section>
-
-    <!-- 导航入口卡片 -->
-    <section class="nav-cards">
-      <h2 class="section-title">探索</h2>
-      <div class="cards-grid">
-        <router-link to="/articles" class="nav-card nav-card--articles card-hover">
-          <span class="nav-card__icon">📖</span>
-          <h3 class="nav-card__title">文章</h3>
-          <p class="nav-card__desc">关于死亡与生命的思考和知识</p>
+    <!-- 今日凝视 -->
+    <section class="today-section">
+      <h2 class="section-title">今日凝视</h2>
+      <div class="today-grid">
+        <router-link :to="todayArticle.link" class="today-card today-card--article">
+          <span class="today-label">读一篇文章</span>
+          <h3>{{ todayArticle.title }}</h3>
+          <p>{{ todayArticle.excerpt }}</p>
         </router-link>
-        <router-link to="/calendar" class="nav-card nav-card--calendar card-hover">
-          <span class="nav-card__icon">📅</span>
-          <h3 class="nav-card__title">生命日历</h3>
-          <p class="nav-card__desc">可视化你的生命，感受时间的珍贵</p>
+        <router-link :to="todayPoem.link" class="today-card today-card--poem">
+          <span class="today-label">读一首诗</span>
+          <h3>{{ todayPoem.title }}</h3>
+          <p>{{ todayPoem.author }}</p>
         </router-link>
-        <router-link to="/bucketlist" class="nav-card nav-card--bucketlist card-hover">
-          <span class="nav-card__icon">✨</span>
-          <h3 class="nav-card__title">遗愿清单</h3>
-          <p class="nav-card__desc">写下你想做的事，趁现在</p>
+        <router-link :to="todayStory.link" class="today-card today-card--story">
+          <span class="today-label">读一个故事</span>
+          <h3>{{ todayStory.title }}</h3>
+          <p>{{ todayStory.excerpt }}</p>
         </router-link>
-        <router-link to="/letters" class="nav-card nav-card--letters card-hover">
-          <span class="nav-card__icon">✉️</span>
-          <h3 class="nav-card__title">信件</h3>
-          <p class="nav-card__desc">写给未来的自己或珍视的人</p>
-        </router-link>
-        <router-link to="/poetry" class="nav-card nav-card--poetry card-hover">
-          <span class="nav-card__icon">🎨</span>
-          <h3 class="nav-card__title">诗与艺术</h3>
-          <p class="nav-card__desc">以文字和艺术触碰生命的本质</p>
-        </router-link>
-        <router-link to="/ways-to-die" class="nav-card nav-card--ways card-hover">
-          <span class="nav-card__icon">🌙</span>
-          <h3 class="nav-card__title">一万种死法</h3>
-          <p class="nav-card__desc">认识死亡的方式，是为了更好地活</p>
-        </router-link>
-        <router-link to="/practices" class="nav-card nav-card--practices card-hover">
-          <span class="nav-card__icon">🧘</span>
-          <h3 class="nav-card__title">练习</h3>
-          <p class="nav-card__desc">从死亡视角出发，回归当下的修行</p>
-        </router-link>
-        <router-link to="/stories" class="nav-card nav-card--stories card-hover">
-          <span class="nav-card__icon">📖</span>
-          <h3 class="nav-card__title">生命故事</h3>
-          <p class="nav-card__desc">在别人的故事里看见自己</p>
-        </router-link>
-        <router-link to="/memorial" class="nav-card nav-card--memorial card-hover">
-          <span class="nav-card__icon">🕯️</span>
-          <h3 class="nav-card__title">哀悼空间</h3>
-          <p class="nav-card__desc">为思念的人点亮一支蜡烛</p>
-        </router-link>
-        <router-link to="/advance-directives" class="nav-card nav-card--directives card-hover">
-          <span class="nav-card__icon">📝</span>
-          <h3 class="nav-card__title">我的意愿</h3>
-          <p class="nav-card__desc">温和地整理内心的声音</p>
-        </router-link>
-        <router-link to="/recommendations" class="nav-card nav-card--recommendations card-hover">
-          <span class="nav-card__icon">📚</span>
-          <h3 class="nav-card__title">推荐</h3>
-          <p class="nav-card__desc">关于生命与死亡的书单、影单与播客</p>
-        </router-link>
-        <router-link to="/about" class="nav-card nav-card--about card-hover">
-          <span class="nav-card__icon">💛</span>
-          <h3 class="nav-card__title">关于</h3>
-          <p class="nav-card__desc">了解这个网站的初心和理念</p>
+        <router-link to="/ways-to-die" class="today-card today-card--ways">
+          <span class="today-label">认识一种离开</span>
+          <h3>{{ todayWay.name }}</h3>
+          <p>{{ todayWay.summary }}</p>
         </router-link>
       </div>
+    </section>
+
+    <!-- 你的生命之旅 -->
+    <section class="journey-section">
+      <div class="journey-card">
+        <h2 class="section-title">你的生命之旅</h2>
+        <div class="journey-progress">
+          <div class="journey-bar">
+            <div class="journey-fill" :style="{ width: journeyProgress + '%' }"></div>
+          </div>
+          <span class="journey-percent">{{ journeyProgress }}%</span>
+        </div>
+        <div class="journey-steps">
+          <router-link to="/calendar" class="journey-step" :class="{ active: journey.calendar }">
+            <span class="step-icon">📅</span>
+            <span class="step-label">认识时间</span>
+          </router-link>
+          <router-link to="/practices" class="journey-step" :class="{ active: journey.practices }">
+            <span class="step-icon">🧘</span>
+            <span class="step-label">完成练习</span>
+          </router-link>
+          <router-link to="/bucketlist" class="journey-step" :class="{ active: journey.bucketlist }">
+            <span class="step-icon">✨</span>
+            <span class="step-label">写下遗愿</span>
+          </router-link>
+          <router-link to="/advance-directives" class="journey-step" :class="{ active: journey.directives }">
+            <span class="step-icon">📝</span>
+            <span class="step-label">整理意愿</span>
+          </router-link>
+        </div>
+        <p class="journey-hint">每一小步，都是向死而生的练习。</p>
+      </div>
+    </section>
+
+    <!-- 四幕剧入口 -->
+    <section class="acts-section">
+      <h2 class="section-title">四幕剧</h2>
+      <div class="acts-grid">
+        <router-link to="/articles" class="act-card act-card--dawn">
+          <span class="act-emoji">🌅</span>
+          <h3>晨光 · 觉知</h3>
+          <p>先理解死亡，再决定如何活。</p>
+          <span class="act-link">进入第一幕 →</span>
+        </router-link>
+        <router-link to="/poetry" class="act-card act-card--noon">
+          <span class="act-emoji">🌿</span>
+          <h3>午后 · 凝视</h3>
+          <p>语言抵达不了的地方，诗可以。</p>
+          <span class="act-link">进入第二幕 →</span>
+        </router-link>
+        <router-link to="/practices" class="act-card act-card--dusk">
+          <span class="act-emoji">🌇</span>
+          <h3>黄昏 · 整理</h3>
+          <p>把心愿写下来，然后去实现。</p>
+          <span class="act-link">进入第三幕 →</span>
+        </router-link>
+        <router-link to="/memorial" class="act-card act-card--night">
+          <span class="act-emoji">🌙</span>
+          <h3>夜晚 · 告别</h3>
+          <p>思念不是终点，而是继续爱。</p>
+          <span class="act-link">进入第四幕 →</span>
+        </router-link>
+      </div>
+    </section>
+
+    <!-- 全部入口 -->
+    <section class="all-links">
+      <router-link to="/stories">生命故事</router-link>
+      <router-link to="/ways-to-die">一万种死法</router-link>
+      <router-link to="/letters">信件</router-link>
+      <router-link to="/advance-directives">我的意愿</router-link>
+      <router-link to="/recommendations">推荐</router-link>
+      <router-link to="/about">关于</router-link>
     </section>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import DailyPrompt from '@/components/interactive/DailyPrompt.vue'
-import GratitudeMoments from '@/components/interactive/GratitudeMoments.vue'
+import { ref, computed, onMounted } from 'vue'
+import { useContent } from '@/composables/useContent'
+import { useBucketlistStore } from '@/stores/bucketlist'
+import { useLettersStore } from '@/stores/letters'
+import { useReflectionsStore } from '@/stores/reflections'
+import { loadJSON } from '@/utils/storage'
+
+
+const articles = ref([])
+const poems = ref([])
+const stories = ref([])
+const waysEntries = ref([])
+const loading = ref(true)
+
+const quotes = [
+  { text: '死亡不是生命的终点，遗忘才是。', author: '《寻梦环游记》' },
+  { text: '向死而生的意义是：当你无限接近死亡，才能深切体会生的意义。', author: '海德格尔' },
+  { text: '生如夏花之绚烂，死如秋叶之静美。', author: '泰戈尔' },
+  { text: '死并非生的对立面，而是作为生的一部分永存。', author: '村上春树' },
+  { text: '我们无法延长生命的长度，但可以拓展它的宽度。', author: '佚名' },
+  { text: '认识这一万种离开，是为了选择一种留下。', author: 'Memento Vivere' }
+]
+
+function dayOfYear() {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), 0, 0)
+  return Math.floor((now - start) / 86400000)
+}
+
+const todayQuote = computed(() => quotes[dayOfYear() % quotes.length])
 
 const greeting = computed(() => {
   const hour = new Date().getHours()
-  if (hour < 6) return '夜深了 🌙'
-  if (hour < 9) return '早安 ☀️'
-  if (hour < 12) return '上午好 🌿'
-  if (hour < 14) return '午安 🌤️'
-  if (hour < 18) return '下午好 🍂'
-  return '傍晚好 🌅'
+  if (hour < 6) return '夜深了'
+  if (hour < 9) return '晨光初现'
+  if (hour < 12) return '上午好'
+  if (hour < 14) return '午安'
+  if (hour < 18) return '午后静好'
+  return '傍晚来临'
+})
+
+const dateText = computed(() => {
+  const d = new Date()
+  return `${d.getMonth() + 1}月${d.getDate()}日`
+})
+
+const todayArticle = computed(() => {
+  if (!articles.value.length) return { title: '加载中…', excerpt: '', link: '/articles' }
+  const idx = dayOfYear() % articles.value.length
+  const a = articles.value[idx]
+  return {
+    title: a.title,
+    excerpt: a.excerpt ? a.excerpt.slice(0, 60) + '…' : '',
+    link: `/articles/${a.slug}`
+  }
+})
+
+const todayPoem = computed(() => {
+  if (!poems.value.length) return { title: '加载中…', author: '', link: '/poetry' }
+  const idx = dayOfYear() % poems.value.length
+  const p = poems.value[idx]
+  return { title: p.title, author: p.author, link: '/poetry' }
+})
+
+const todayStory = computed(() => {
+  if (!stories.value.length) return { title: '加载中…', excerpt: '', link: '/stories' }
+  const idx = dayOfYear() % stories.value.length
+  const s = stories.value[idx]
+  return {
+    title: s.title,
+    excerpt: s.excerpt ? s.excerpt.slice(0, 60) + '…' : '',
+    link: `/stories/${s.slug}`
+  }
+})
+
+const todayWay = computed(() => {
+  if (!waysEntries.value.length) return { name: '加载中…', summary: '' }
+  const idx = dayOfYear() % waysEntries.value.length
+  return waysEntries.value[idx]
+})
+
+const todayGaze = computed(() => todayArticle.value)
+
+// 生命之旅进度
+const bucketlistStore = useBucketlistStore()
+const lettersStore = useLettersStore()
+const reflectionsStore = useReflectionsStore()
+
+const journey = computed(() => {
+  const savedDirectives = loadJSON('mv-advance-directives', {})
+  return {
+    calendar: !!localStorage.getItem('mv-birthdate'),
+    practices: reflectionsStore.historyEntries.length > 0,
+    bucketlist: bucketlistStore.items.length > 0,
+    directives: Object.values(savedDirectives).some(v => v && v.trim())
+  }
+})
+
+const journeyProgress = computed(() => {
+  const done = Object.values(journey.value).filter(Boolean).length
+  return Math.round((done / 4) * 100)
+})
+
+function seedStyle(i) {
+  const angle = (i * 30) * Math.PI / 180
+  const distance = 40 + (i % 3) * 10
+  const x = Math.cos(angle) * distance
+  const y = Math.sin(angle) * distance
+  return {
+    '--x': `${x}px`,
+    '--y': `${y}px`,
+    transform: `translate(${x}px, ${y}px)`,
+    animationDelay: `${i * 0.15}s`
+  }
+}
+
+onMounted(async () => {
+  const { loadAllArticles, loadAllPoetry, loadAllStories } = useContent()
+  try {
+    const [a, p, s] = await Promise.all([loadAllArticles(), loadAllPoetry(), loadAllStories()])
+    articles.value = a
+    poems.value = p
+    stories.value = s
+    const waysMod = await import('@/data/ways-to-die.json')
+    waysEntries.value = waysMod.entries || []
+  } finally {
+    loading.value = false
+  }
 })
 </script>
 
 <style scoped>
 .hero {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-3xl);
-  min-height: 60vh;
-  padding: var(--space-2xl) 0;
+  min-height: 68vh;
+  padding: var(--space-4xl) 0;
+  overflow: hidden;
 }
 
-.hero__content {
-  flex: 1;
+.hero__glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 40%, rgba(194, 149, 107, 0.12), transparent 50%);
+  pointer-events: none;
 }
+
+.hero__content { flex: 1; position: relative; z-index: 1; }
 
 .hero__greeting {
+  font-family: var(--font-elegant);
   font-size: var(--text-sm);
   color: var(--color-text-lighter);
-  margin-bottom: var(--space-sm);
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-md);
 }
 
 .hero__title {
-  font-size: clamp(2.5rem, 5vw, 3.5rem);
-  color: var(--color-gold-dark);
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  color: var(--color-ink);
   margin-bottom: var(--space-xs);
 }
 
 .hero__subtitle {
   font-family: var(--font-heading);
   font-size: var(--text-2xl);
-  color: var(--color-gold-light);
-  margin-bottom: var(--space-lg);
-}
-
-.hero__desc {
-  font-size: var(--text-lg);
-  color: var(--color-text-light);
-  line-height: 1.8;
+  color: var(--color-gold-dark);
   margin-bottom: var(--space-xl);
 }
 
-.hero__actions {
-  display: flex;
-  gap: var(--space-md);
-  flex-wrap: wrap;
+.hero__quote {
+  font-family: var(--font-elegant);
+  font-size: var(--text-xl);
+  color: var(--color-text);
+  line-height: 1.8;
+  margin-bottom: var(--space-sm);
+  max-width: 560px;
 }
+
+.hero__quote-author {
+  font-size: var(--text-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--space-xl);
+}
+
+.hero__actions { display: flex; gap: var(--space-md); flex-wrap: wrap; }
 
 .warm-btn--primary,
 .warm-btn--secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
-  padding: 0.75rem 1.75rem;
+  padding: 0.875rem 2rem;
   font-size: var(--text-base);
   font-weight: 500;
   border-radius: var(--radius-full);
@@ -192,131 +330,280 @@ const greeting = computed(() => {
 }
 
 .warm-btn--primary {
-  background: var(--color-gold);
-  color: #fff;
+  background: var(--color-ink);
+  color: var(--color-moon);
 }
 .warm-btn--primary:hover {
   background: var(--color-gold-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
 }
 
 .warm-btn--secondary {
   background: var(--color-warm-white);
-  color: var(--color-gold-dark);
+  color: var(--color-ink);
   border: 1px solid var(--color-border);
 }
 .warm-btn--secondary:hover {
-  background: var(--color-border-light);
-  border-color: var(--color-gold-light);
+  border-color: var(--color-gold);
+  transform: translateY(-2px);
 }
 
 .hero__visual {
-  flex: 0 0 240px;
+  flex: 0 0 260px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.hero__illustration {
+.dandelion {
+  position: relative;
   width: 200px;
   height: 240px;
 }
 
-/* 每日反思 */
-.daily-section {
-  margin: var(--space-2xl) 0;
+.dandelion__stem {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 2px;
+  height: 120px;
+  background: linear-gradient(to top, var(--color-sage), transparent);
 }
 
-/* 感恩时刻 */
-.gratitude-section {
-  margin: var(--space-2xl) 0;
+.dandelion__seeds {
+  position: absolute;
+  left: 50%;
+  top: 80px;
 }
 
-/* 导航卡片网格 */
-.nav-cards {
-  margin-top: var(--space-3xl);
+.dandelion__seed {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--color-gold-light);
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: seed-float 6s ease-in-out infinite;
 }
 
+@keyframes seed-float {
+  0%, 100% { opacity: 0.4; transform: translate(var(--x, 0), var(--y, 0)) scale(1); }
+  50% { opacity: 0.9; transform: translate(var(--x, 0), calc(var(--y, 0) - 8px)) scale(1.1); }
+}
+
+/* 今日凝视 */
+.today-section { margin: var(--space-3xl) 0; }
 .section-title {
-  font-size: var(--text-2xl);
-  color: var(--color-gold-dark);
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  color: var(--color-ink);
   margin-bottom: var(--space-xl);
 }
 
-.cards-grid {
+.today-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--space-lg);
 }
 
-.nav-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: var(--space-xl);
+.today-card {
+  display: block;
   background: var(--color-warm-white);
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius-md);
-  border-left: 3px solid var(--color-gold);
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  padding: var(--space-xl);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
 }
 
-.nav-card:hover {
-  transform: translateY(-2px);
+.today-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 0%, rgba(194, 149, 107, 0.08), transparent 50%);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.today-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.today-card:hover::before { opacity: 1; }
+
+.today-label {
+  display: inline-block;
+  font-size: var(--text-xs);
+  color: var(--color-gold-dark);
+  background: var(--color-cream);
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: var(--space-md);
+}
+
+.today-card h3 {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--color-ink);
+  margin-bottom: var(--space-sm);
+  line-height: 1.4;
+}
+
+.today-card p {
+  font-size: var(--text-sm);
+  color: var(--color-text-light);
+  line-height: 1.7;
+}
+
+/* 生命之旅 */
+.journey-section { margin: var(--space-3xl) 0; }
+
+.journey-card {
+  background: var(--color-warm-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl);
+}
+
+.journey-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.journey-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--color-border-light);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.journey-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-gold), var(--color-dusty-rose));
+  border-radius: 999px;
+  transition: width var(--transition-slow);
+}
+
+.journey-percent {
+  font-family: var(--font-elegant);
+  font-size: var(--text-lg);
+  color: var(--color-ink);
+  min-width: 48px;
+}
+
+.journey-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-md);
+}
+
+.journey-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--color-cream);
+  border-radius: var(--radius-md);
+  color: var(--color-text-light);
+  transition: all var(--transition-base);
+}
+
+.journey-step.active {
+  background: rgba(194, 149, 107, 0.12);
+  color: var(--color-gold-dark);
+}
+
+.journey-step:hover { transform: translateY(-2px); }
+
+.step-icon { font-size: var(--text-xl); }
+.step-label { font-size: var(--text-sm); }
+
+.journey-hint {
+  margin-top: var(--space-lg);
+  font-size: var(--text-sm);
+  color: var(--color-text-lighter);
+  text-align: center;
+}
+
+/* 四幕剧 */
+.acts-section { margin: var(--space-3xl) 0; }
+
+.acts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-lg);
+}
+
+.act-card {
+  display: block;
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  color: var(--color-moon);
+  transition: all var(--transition-base);
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.act-card:hover {
+  transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
 
-.nav-card--articles { border-left-color: var(--color-warm-taupe); }
-.nav-card--calendar { border-left-color: var(--color-gold); }
-.nav-card--bucketlist { border-left-color: var(--color-sage); }
-.nav-card--letters { border-left-color: var(--color-dusty-rose); }
-.nav-card--poetry { border-left-color: var(--color-dusty-rose-light); }
-.nav-card--ways { border-left-color: var(--color-dusty-rose); }
-.nav-card--practices { border-left-color: var(--color-sage-light); }
-.nav-card--stories { border-left-color: var(--color-warm-taupe); }
-.nav-card--memorial { border-left-color: var(--color-dusty-rose); }
-.nav-card--directives { border-left-color: var(--color-sage); }
-.nav-card--recommendations { border-left-color: var(--color-warm-taupe-light); }
-.nav-card--about { border-left-color: var(--color-gold-light); }
+.act-card--dawn { background: linear-gradient(135deg, #C2956B, #A67B52); }
+.act-card--noon { background: linear-gradient(135deg, #8B9D83, #6B7A63); }
+.act-card--dusk { background: linear-gradient(135deg, #C4929E, #A6717D); }
+.act-card--night { background: linear-gradient(135deg, #4A3F35, #2C2620); }
 
-.nav-card__icon {
-  font-size: 2rem;
+.act-emoji { font-size: 2rem; margin-bottom: var(--space-md); }
+
+.act-card h3 {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
   margin-bottom: var(--space-sm);
 }
 
-.nav-card__title {
-  font-size: var(--text-lg);
-  color: var(--color-text);
-  margin-bottom: var(--space-xs);
+.act-card p {
+  font-size: var(--text-sm);
+  opacity: 0.9;
+  line-height: 1.6;
+  flex: 1;
 }
 
-.nav-card__desc {
+.act-link {
+  font-size: var(--text-sm);
+  margin-top: var(--space-md);
+  opacity: 0.8;
+}
+
+/* 全部入口 */
+.all-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin-top: var(--space-3xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.all-links a {
   font-size: var(--text-sm);
   color: var(--color-text-light);
-  line-height: 1.5;
+  transition: color var(--transition-fast);
 }
 
+.all-links a:hover { color: var(--color-gold-dark); }
+
 @media (max-width: 768px) {
-  .hero {
-    flex-direction: column;
-    min-height: auto;
-    text-align: center;
-    gap: var(--space-xl);
-  }
-  .hero__actions {
-    justify-content: center;
-  }
-  .hero__visual {
-    flex: 0 0 auto;
-    order: -1;
-  }
-  .hero__illustration {
-    width: 140px;
-    height: 180px;
-  }
-  .cards-grid {
-    grid-template-columns: 1fr;
-  }
+  .hero { flex-direction: column; text-align: center; min-height: auto; }
+  .hero__actions { justify-content: center; }
+  .hero__visual { display: none; }
 }
 </style>

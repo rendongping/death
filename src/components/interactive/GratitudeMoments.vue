@@ -50,6 +50,7 @@
 import { ref, computed } from 'vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
+import { loadJSON, saveJSON } from '@/utils/storage'
 
 const STORAGE_KEY = 'mv-gratitude'
 
@@ -65,8 +66,7 @@ const today = new Date()
 const todayKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`
 const todayStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`
 
-const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
-const entries = ref(saved)
+const entries = ref(loadJSON(STORAGE_KEY, {}))
 
 const todayItems = computed(() => entries.value[todayKey] || [])
 const hasTodayEntry = computed(() => todayItems.value.length > 0)
@@ -107,7 +107,7 @@ function saveToday() {
     ...entries.value,
     [todayKey]: items
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.value))
+  saveJSON(STORAGE_KEY, entries.value)
   newItems.value = ['', '', '']
 }
 </script>

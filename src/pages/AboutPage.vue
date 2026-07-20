@@ -35,6 +35,22 @@
       </section>
 
       <section class="about-section">
+        <h2>四幕剧</h2>
+        <p>
+          我们把整个网站设计成一场「向死而生的四幕剧」：
+        </p>
+        <ul>
+          <li><strong>晨光 · 觉知</strong>——文章、一万种死法、生命日历</li>
+          <li><strong>午后 · 凝视</strong>——诗歌、故事、深度阅读</li>
+          <li><strong>黄昏 · 整理</strong>——练习、遗愿清单、信件</li>
+          <li><strong>夜晚 · 告别</strong>——哀悼空间、我的意愿、善终</li>
+        </ul>
+        <p>
+          你可以从任何一幕进入，也可以每天完成一小步。
+        </p>
+      </section>
+
+      <section class="about-section">
         <h2>这个网站的初心</h2>
         <p>
           我们希望创建一个安全、温暖的空间，让人们可以：

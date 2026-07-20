@@ -36,6 +36,17 @@ function getSlugFromPath(path, prefix) {
 }
 
 /**
+ * 估算阅读时长（分钟）
+ */
+function estimateReadingTime(text) {
+  if (!text) return 0
+  const plain = text.replace(/[#*`\-\[\]()>_~|]/g, '').trim()
+  const chineseChars = (plain.match(/[\u4e00-\u9fa5]/g) || []).length
+  const words = plain.split(/\s+/).filter(Boolean).length
+  return Math.max(1, Math.round(chineseChars / 350 + words / 180))
+}
+
+/**
  * 轻量 frontmatter 解析器（浏览器兼容，无需 Buffer）
  */
 function parseFrontmatter(raw) {
@@ -121,7 +132,8 @@ export function useContent() {
         slug: getSlugFromPath(path, prefix),
         metadata,
         html,
-        rawContent: content
+        rawContent: content,
+        readingTime: estimateReadingTime(content)
       }
     } catch (err) {
       error.value = err.message
@@ -154,7 +166,8 @@ export function useContent() {
               slug: getSlugFromPath(path, prefix),
               ...metadata,
               excerpt: metadata.excerpt || excerpt,
-              image: metadata.image || null
+              image: metadata.image || null,
+              readingTime: estimateReadingTime(content)
             }
           } catch {
             return null

@@ -129,11 +129,12 @@ import { ref, computed } from 'vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import { loadJSON, saveJSON } from '@/utils/storage'
 
 const STORAGE_KEY = 'mv-letters'
 
 const mode = ref('list')
-const letters = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'))
+const letters = ref(loadJSON(STORAGE_KEY, []))
 const viewingLetter = ref(null)
 const selectedTemplate = ref('')
 
@@ -198,7 +199,7 @@ const sortedLetters = computed(() =>
 )
 
 function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(letters.value))
+  saveJSON(STORAGE_KEY, letters.value)
 }
 
 function startNewLetter() {

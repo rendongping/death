@@ -114,6 +114,7 @@ import { ref, computed } from 'vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import { loadJSON, saveJSON } from '@/utils/storage'
 
 const STORAGE_KEY = 'mv-bucketlist'
 
@@ -152,7 +153,7 @@ const categories = [
 
 const newItemTitle = ref('')
 const newItemCategory = ref('experience')
-const items = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'))
+const items = ref(loadJSON(STORAGE_KEY, []))
 
 const pendingItems = computed(() =>
   items.value.filter(i => !i.done).sort((a, b) => b.createdAt - a.createdAt)
@@ -162,7 +163,7 @@ const completedItems = computed(() =>
 )
 
 function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items.value))
+  saveJSON(STORAGE_KEY, items.value)
 }
 
 function addItem() {

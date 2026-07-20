@@ -76,6 +76,7 @@ import { ref, computed } from 'vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
 import Illustration from '@/components/ui/Illustration.vue'
+import { loadJSON, saveJSON } from '@/utils/storage'
 
 const STORAGE_KEY = 'mv-advance-directives'
 
@@ -118,7 +119,7 @@ const questions = [
   }
 ]
 
-const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+const saved = loadJSON(STORAGE_KEY, {})
 const answers = ref({})
 questions.forEach(q => {
   answers.value[q.id] = saved[q.id] || ''
@@ -133,7 +134,7 @@ const hasAnyAnswer = computed(() =>
 )
 
 function generateResult() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(answers.value))
+  saveJSON(STORAGE_KEY, answers.value)
   showResult.value = true
 }
 

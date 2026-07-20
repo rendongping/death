@@ -111,6 +111,10 @@
         </article>
       </div>
 
+      <section class="gaze-section">
+        <p class="gaze-text">你已经凝视了死亡 <strong>{{ gazeCount }}</strong> 次。现在，请回到生活。</p>
+      </section>
+
       <section class="closing">
         <div class="closing-card">
           <h2 class="closing-title">死亡只有一万种，活着的方式却有无数种</h2>
@@ -123,6 +127,18 @@
             <router-link to="/practices" class="closing-link">去做一个练习 →</router-link>
             <router-link to="/articles" class="closing-link">去沉淀思考 →</router-link>
           </div>
+        </div>
+      </section>
+
+      <section class="life-wall">
+        <h2 class="life-wall-title">生之墙</h2>
+        <p class="life-wall-desc">写下今天你想好好做的一件事，作为回到生活的锚点。</p>
+        <div class="life-wall-input">
+          <input v-model="newWish" placeholder="例如：给妈妈打个电话" @keyup.enter="addWish" />
+          <button @click="addWish">写下</button>
+        </div>
+        <div v-if="wishes.length" class="wishes">
+          <span v-for="(w, i) in wishes" :key="i" class="wish-tag">{{ w }}</span>
         </div>
       </section>
 
@@ -186,11 +202,15 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import PageHero from '@/components/ui/PageHero.vue'
+import { loadJSON, saveJSON } from '@/utils/storage'
 
 const data = ref(null)
 const loading = ref(true)
 const activeCategory = ref('all')
 const activeEntry = ref(null)
+const gazeCount = ref(loadJSON('mv-ways-gaze', 0))
+const wishes = ref(loadJSON('mv-life-wishes', []))
+const newWish = ref('')
 
 onMounted(async () => {
   try {
@@ -246,12 +266,22 @@ function shortPrevention(text) {
 
 function openEntry(entry) {
   activeEntry.value = entry
+  gazeCount.value += 1
+  saveJSON('mv-ways-gaze', gazeCount.value)
   document.body.style.overflow = 'hidden'
 }
 
 function closeEntry() {
   activeEntry.value = null
   document.body.style.overflow = ''
+}
+
+function addWish() {
+  const text = newWish.value.trim()
+  if (!text) return
+  wishes.value.push(text)
+  newWish.value = ''
+  saveJSON('mv-life-wishes', wishes.value)
 }
 </script>
 
@@ -428,6 +458,87 @@ function closeEntry() {
 }
 
 .prevention-icon { flex-shrink: 0; }
+
+/* ── Gaze ── */
+.gaze-section {
+  margin: var(--space-2xl) 0;
+  text-align: center;
+}
+
+.gaze-text {
+  font-family: var(--font-elegant);
+  font-size: var(--text-lg);
+  color: var(--color-text-light);
+}
+
+.gaze-text strong {
+  color: var(--color-dusty-rose);
+  font-size: var(--text-2xl);
+  margin: 0 var(--space-xs);
+}
+
+/* ── Life Wall ── */
+.life-wall {
+  margin-top: var(--space-2xl);
+  padding: var(--space-2xl);
+  background: var(--color-warm-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.life-wall-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--color-sage);
+  margin-bottom: var(--space-sm);
+}
+
+.life-wall-desc {
+  color: var(--color-text-light);
+  margin-bottom: var(--space-lg);
+}
+
+.life-wall-input {
+  display: flex;
+  gap: var(--space-sm);
+  max-width: 480px;
+  margin: 0 auto var(--space-lg);
+}
+
+.life-wall-input input {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.life-wall-input button {
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--color-sage);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.life-wall-input button:hover { background: var(--color-sage-light); }
+
+.wishes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.wish-tag {
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(139, 157, 131, 0.12);
+  color: var(--color-sage);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+}
 
 /* ── Closing ── */
 .closing {

@@ -4,21 +4,21 @@
 
 /* Vue Router 页面过渡 */
 .page-enter-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 .page-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .page-enter-from {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(8px);
 }
 
 .page-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-12px);
 }
 
 /* 淡入 */

@@ -43,6 +43,7 @@
 import { ref, computed } from 'vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
+import { loadJSON, saveJSON } from '@/utils/storage'
 
 const STORAGE_KEY = 'mv-reflections'
 
@@ -106,7 +107,7 @@ const prompt = computed(() => {
   return prompts[idx]
 })
 
-const reflections = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'))
+const reflections = ref(loadJSON(STORAGE_KEY, {}))
 const entry = ref('')
 
 const hasWrittenToday = computed(() => !!reflections.value[todayKey.value])
@@ -123,7 +124,7 @@ function saveEntry() {
     ...reflections.value,
     [todayKey.value]: entry.value.trim()
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reflections.value))
+  saveJSON(STORAGE_KEY, reflections.value)
   entry.value = ''
 }
 </script>

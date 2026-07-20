@@ -125,6 +125,7 @@
 import { ref, computed, watch } from 'vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
+import { loadJSON, saveJSON } from '@/utils/storage'
 
 const STORAGE_KEY = 'mv-birthdate'
 const NOTES_KEY = 'mv-week-notes'
@@ -141,7 +142,7 @@ const seasons = [
 
 const birthdate = ref(localStorage.getItem(STORAGE_KEY) || '')
 const birthdateInput = ref('')
-const weekNotes = ref(JSON.parse(localStorage.getItem(NOTES_KEY) || '{}'))
+const weekNotes = ref(loadJSON(NOTES_KEY, {}))
 const showNoteModal = ref(false)
 const activeWeekIndex = ref(-1)
 const activeNote = ref('')
@@ -218,7 +219,7 @@ const activeWeekLabel = computed(() => {
 
 const pendingBucketItems = computed(() => {
   try {
-    const items = JSON.parse(localStorage.getItem(BUCKETLIST_KEY) || '[]')
+    const items = loadJSON(BUCKETLIST_KEY, [])
     return items.filter(i => !i.done).slice(0, 10)
   } catch {
     return []
@@ -251,7 +252,7 @@ function saveNote() {
   if (!activeNote.value.trim()) return
   const updated = { ...weekNotes.value, [activeWeekIndex.value]: activeNote.value.trim() }
   weekNotes.value = updated
-  localStorage.setItem(NOTES_KEY, JSON.stringify(updated))
+  saveJSON(NOTES_KEY, updated)
   showNoteModal.value = false
   selectedBucketItem.value = ''
 }
