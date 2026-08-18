@@ -10,6 +10,7 @@
 - Vue Router 4
 - Pinia 2
 - marked + DOMPurify（Markdown 渲染与消毒）
+- vite-plugin-pwa（可安装到主屏、离线可用）
 
 ## 快速开始
 

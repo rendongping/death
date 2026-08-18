@@ -10,7 +10,7 @@
         <p class="hero__quote">「{{ todayQuote.text }}」</p>
         <p class="hero__quote-author">—— {{ todayQuote.author }}</p>
         <div class="hero__actions">
-          <router-link :to="todayGaze.link" class="warm-btn warm-btn--primary">开始今日凝视</router-link>
+          <router-link :to="todayGaze.link" class="warm-btn warm-btn--primary" @click="recordGaze">开始今日凝视</router-link>
           <router-link to="/about" class="warm-btn warm-btn--secondary">了解四幕剧</router-link>
         </div>
       </div>
@@ -24,6 +24,9 @@
       </div>
     </section>
 
+    <!-- 生命倒计时 -->
+    <LifeCountdown />
+
     <!-- 今日凝视 -->
     <section class="today-section">
       <h2 class="section-title">今日凝视</h2>
@@ -33,7 +36,7 @@
           <h3>{{ todayArticle.title }}</h3>
           <p>{{ todayArticle.excerpt }}</p>
         </router-link>
-        <router-link :to="todayPoem.link" class="today-card today-card--poem">
+        <router-link :to="todayPoem.link" class="today-card today-card--poem" @click="recordGaze">
           <span class="today-label">今日诗签</span>
           <h3>{{ todayPoem.title }}</h3>
           <p v-if="todayPoem.highlight" class="today-poem-highlight">「{{ todayPoem.highlight }}」</p>
@@ -44,7 +47,7 @@
           <h3>{{ todayStory.title }}</h3>
           <p>{{ todayStory.excerpt }}</p>
         </router-link>
-        <router-link to="/ways-to-die" class="today-card today-card--ways">
+        <router-link to="/ways-to-die" class="today-card today-card--ways" @click="recordGaze">
           <span class="today-label">认识一种离开</span>
           <h3>{{ todayWay.name }}</h3>
           <p>{{ todayWay.summary }}</p>
@@ -177,7 +180,9 @@ import { useLettersStore } from '@/stores/letters'
 import { useReflectionsStore } from '@/stores/reflections'
 import { loadJSON } from '@/utils/storage'
 import { useProfileStore } from '@/stores/profile'
+import { useGazeStore } from '@/stores/gaze'
 import { downloadBackup, importBackup } from '@/utils/backup'
+import LifeCountdown from '@/components/interactive/LifeCountdown.vue'
 
 
 const articles = ref([])
@@ -262,6 +267,11 @@ const bucketlistStore = useBucketlistStore()
 const lettersStore = useLettersStore()
 const reflectionsStore = useReflectionsStore()
 const profileStore = useProfileStore()
+const gazeStore = useGazeStore()
+
+function recordGaze() {
+  gazeStore.recordGaze()
+}
 
 const profileForm = ref({ name: '', focus: [] })
 const focusOptions = [
@@ -295,6 +305,7 @@ function setLastRead(type, slug, title) {
     poem: '/poetry'
   }
   profileStore.setLastRead({ type, slug, title, link: linkMap[type] || '/' })
+  gazeStore.recordGaze()
 }
 
 async function exportData() {

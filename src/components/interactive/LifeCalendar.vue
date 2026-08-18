@@ -118,6 +118,7 @@
         <WarmButton variant="ghost" @click="exportLifeMap">导出人生地图</WarmButton>
         <WarmButton variant="ghost" @click="resetBirthdate">重新设置生日</WarmButton>
       </div>
+      <p class="wallpaper-hint">导出后可设为手机壁纸，每天看见自己的时间。</p>
     </div>
   </div>
 </template>
@@ -598,6 +599,13 @@ watch(birthdate, () => {
 .reset-row {
   text-align: center;
   margin-top: var(--space-xl);
+}
+
+.wallpaper-hint {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-lighter);
+  margin-top: var(--space-sm);
 }
 
 @media (max-width: 768px) {

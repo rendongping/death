@@ -94,7 +94,7 @@ const routes = [
   {
     path: '/gratitude',
     name: 'gratitude',
-    component: () => import('@/components/interactive/GratitudeMoments.vue'),
+    component: () => import('@/pages/GratitudePage.vue'),
     meta: { title: '感恩时刻 — Memento Vivere', description: '记录生命中的感恩瞬间。' }
   },
   {
