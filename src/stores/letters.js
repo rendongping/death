@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { loadJSON, saveJSON } from '@/utils/storage'
+import { KEYS } from '@/utils/keys'
 
+/** 信件的唯一持有者，编辑器只调这里的 addLetter / deleteLetter */
 export const useLettersStore = defineStore('letters', () => {
-  const STORAGE_KEY = 'mv-letters'
+  const STORAGE_KEY = KEYS.LETTERS
   const letters = ref(loadJSON(STORAGE_KEY, []))
 
   const sortedLetters = computed(() =>

@@ -1,5 +1,32 @@
 <template>
   <div class="home-page">
+    <!-- 到期回访：这是全站闭环的最后一环。用户当初在这里许下的动作，到期必须由网站主动问回来 -->
+    <section v-if="dueCommitments.length" class="due-section">
+      <p class="due-eyebrow">你定的日子到了</p>
+      <ul class="due-list">
+        <li v-for="c in dueCommitments" :key="c.id" class="due-item">
+          <div class="due-main">
+            <router-link v-if="c.link" :to="c.link" class="due-action" @click="commitments.markDone(c.id)">
+              {{ c.action }}
+            </router-link>
+            <span v-else class="due-action">{{ c.action }}</span>
+            <p v-if="c.sourceTitle" class="due-from">
+              来自《{{ c.sourceTitle }}》· {{ overdueText(c) }}
+            </p>
+            <p v-else class="due-from">{{ overdueText(c) }}</p>
+          </div>
+          <div class="due-ops">
+            <button class="due-btn due-btn--done" @click="commitments.markDone(c.id)">做了</button>
+            <button class="due-btn due-btn--later" @click="commitments.postpone(c.id, 3)">再说</button>
+          </div>
+        </li>
+      </ul>
+      <p class="due-foot">
+        <span>共 {{ dueCommitments.length }} 件到期，</span>
+        <router-link to="/commitments">看看我的全部约定 →</router-link>
+      </p>
+    </section>
+
     <!-- 第一幕：今日仪式 -->
     <section class="hero">
       <div class="hero__glow"></div>
@@ -10,8 +37,8 @@
         <p class="hero__quote">「{{ todayQuote.text }}」</p>
         <p class="hero__quote-author">—— {{ todayQuote.author }}</p>
         <div class="hero__actions">
-          <router-link :to="todayGaze.link" class="warm-btn warm-btn--primary" @click="recordGaze">开始今日凝视</router-link>
-          <router-link to="/about" class="warm-btn warm-btn--secondary">了解四幕剧</router-link>
+          <router-link to="/today" class="warm-btn warm-btn--primary">打开今天这一页</router-link>
+          <router-link to="/acts" class="warm-btn warm-btn--secondary">了解四幕剧</router-link>
         </div>
       </div>
       <div class="hero__visual">
@@ -27,9 +54,21 @@
     <!-- 生命倒计时 -->
     <LifeCountdown />
 
+    <!-- 今日状态条：把首页从「内容目录」变成「回来的地方」 -->
+    <section class="today-strip">
+      <div class="strip-dots">
+        <span class="strip-dot" :class="{ on: gazeStore.hasGazedToday }">凝视</span>
+        <span class="strip-dot" :class="{ on: reflectionsStore.hasWrittenToday }">写一行</span>
+        <span class="strip-dot" :class="{ on: commitments.doneRecent > 0 }">做到过</span>
+      </div>
+      <router-link to="/today" class="strip-link">
+        {{ todayStripText }} →
+      </router-link>
+    </section>
+
     <!-- 今日凝视 -->
     <section class="today-section">
-      <h2 class="section-title">今日凝视</h2>
+      <h2 class="section-title">今日读物</h2>
       <div class="today-grid">
         <router-link :to="todayArticle.link" class="today-card today-card--article" @click="setLastRead('article', todayArticle.slug, todayArticle.title)">
           <span class="today-label">读一篇文章</span>
@@ -52,6 +91,16 @@
           <h3>{{ todayWay.name }}</h3>
           <p>{{ todayWay.summary }}</p>
         </router-link>
+      </div>
+    </section>
+
+    <!-- 三步仪式：一问 · 一行 · 回访 -->
+    <section class="ritual-section">
+      <h2 class="section-title">今日仪式</h2>
+      <p class="ritual-sub">读完之后，停一分钟：回答一个问题，写下一行字。</p>
+      <div class="ritual-grid">
+        <DailyPrompt />
+        <TimeCapsule />
       </div>
     </section>
 
@@ -100,6 +149,25 @@
           </div>
           <span class="journey-percent">{{ journeyProgress }}%</span>
         </div>
+        <!-- 生侧指标：全站刻意不显示"凝视了几天"，因为打卡死不是目的 -->
+        <div class="life-stats">
+          <router-link to="/commitments" class="life-stat">
+            <strong>{{ commitments.doneRecent }}</strong>
+            <span>近 7 天做到的事</span>
+          </router-link>
+          <router-link to="/commitments" class="life-stat">
+            <strong>{{ commitments.open.length }}</strong>
+            <span>还欠自己的约定</span>
+          </router-link>
+          <router-link to="/letters" class="life-stat">
+            <strong>{{ lettersStore.letters.length }}</strong>
+            <span>写下的信</span>
+          </router-link>
+          <router-link to="/bucketlist" class="life-stat">
+            <strong>{{ bucketlistStore.completedItems.length }}</strong>
+            <span>已经完成的遗愿</span>
+          </router-link>
+        </div>
         <div class="journey-steps">
           <router-link to="/calendar" class="journey-step" :class="{ active: journey.calendar }">
             <span class="step-icon">📅</span>
@@ -133,29 +201,17 @@
     <section class="acts-section">
       <h2 class="section-title">四幕剧</h2>
       <div class="acts-grid">
-        <router-link to="/articles" class="act-card act-card--dawn">
-          <span class="act-emoji">🌅</span>
-          <h3>晨光 · 觉知</h3>
-          <p>先理解死亡，再决定如何活。</p>
-          <span class="act-link">进入第一幕 →</span>
-        </router-link>
-        <router-link to="/poetry" class="act-card act-card--noon">
-          <span class="act-emoji">🌿</span>
-          <h3>午后 · 凝视</h3>
-          <p>语言抵达不了的地方，诗可以。</p>
-          <span class="act-link">进入第二幕 →</span>
-        </router-link>
-        <router-link to="/practices" class="act-card act-card--dusk">
-          <span class="act-emoji">🌇</span>
-          <h3>黄昏 · 整理</h3>
-          <p>把心愿写下来，然后去实现。</p>
-          <span class="act-link">进入第三幕 →</span>
-        </router-link>
-        <router-link to="/memorial" class="act-card act-card--night">
-          <span class="act-emoji">🌙</span>
-          <h3>夜晚 · 告别</h3>
-          <p>思念不是终点，而是继续爱。</p>
-          <span class="act-link">进入第四幕 →</span>
+        <router-link
+          v-for="act in acts"
+          :key="act.id"
+          :to="act.route"
+          class="act-card"
+          :class="`act-card--${['dawn', 'noon', 'dusk', 'night'][act.id - 1]}`"
+        >
+          <span class="act-emoji">{{ act.emoji }}</span>
+          <h3>{{ act.name }}</h3>
+          <p>{{ act.motto }}</p>
+          <span class="act-link">进入第{{ ['一', '二', '三', '四'][act.id - 1] }}幕 →</span>
         </router-link>
       </div>
     </section>
@@ -179,10 +235,18 @@ import { useBucketlistStore } from '@/stores/bucketlist'
 import { useLettersStore } from '@/stores/letters'
 import { useReflectionsStore } from '@/stores/reflections'
 import { loadJSON } from '@/utils/storage'
+import { KEYS } from '@/utils/keys'
+import { getBirthdate } from '@/utils/week-of-life'
 import { useProfileStore } from '@/stores/profile'
 import { useGazeStore } from '@/stores/gaze'
+import { useCommitmentsStore } from '@/stores/commitments'
 import { downloadBackup, importBackup } from '@/utils/backup'
+import { ACTS } from '@/data/acts'
 import LifeCountdown from '@/components/interactive/LifeCountdown.vue'
+import DailyPrompt from '@/components/interactive/DailyPrompt.vue'
+import TimeCapsule from '@/components/interactive/TimeCapsule.vue'
+
+const acts = ACTS
 
 
 const articles = ref([])
@@ -260,18 +324,42 @@ const todayWay = computed(() => {
   return waysEntries.value[idx]
 })
 
-const todayGaze = computed(() => todayArticle.value)
-
 // 生命之旅进度
 const bucketlistStore = useBucketlistStore()
 const lettersStore = useLettersStore()
 const reflectionsStore = useReflectionsStore()
 const profileStore = useProfileStore()
 const gazeStore = useGazeStore()
+const commitments = useCommitmentsStore()
+
+const dueCommitments = computed(() => commitments.due.slice(0, 3))
+
+function overdueText(c) {
+  const parts = String(c.dueAt || '').split('-').map(Number)
+  if (parts.length < 3 || !parts[2]) return '到日子了'
+  const dueDate = new Date(parts[0], parts[1] - 1, parts[2])
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const days = Math.round((today - dueDate) / 86400000)
+  if (days <= 0) return '就是今天'
+  if (days === 1) return '昨天就该做了'
+  return `已经过了 ${days} 天`
+}
 
 function recordGaze() {
   gazeStore.recordGaze()
 }
+
+const todayStripText = computed(() => {
+  if (commitments.due.length) return `${commitments.due.length} 件到期的约定在等你`
+  const left = [
+    !gazeStore.hasGazedToday,
+    !reflectionsStore.hasWrittenToday
+  ].filter(Boolean).length
+  if (left === 2) return '今天还没开始，去打开今天这一页'
+  if (left === 1) return '今天还差一步，去把它做完'
+  return '今天该做的都做完了，去过今天吧'
+})
 
 const profileForm = ref({ name: '', focus: [] })
 const focusOptions = [
@@ -333,9 +421,9 @@ function badgeLabel(badge) {
 }
 
 const journey = computed(() => {
-  const savedDirectives = loadJSON('mv-advance-directives', {})
+  const savedDirectives = loadJSON(KEYS.ADVANCE_DIRECTIVES, {})
   return {
-    calendar: !!localStorage.getItem('mv-birthdate'),
+    calendar: !!getBirthdate(),
     practices: reflectionsStore.historyEntries.length > 0,
     bucketlist: bucketlistStore.items.length > 0,
     directives: Object.values(savedDirectives).some(v => v && v.trim())
@@ -513,6 +601,49 @@ onMounted(async () => {
 @keyframes seed-float {
   0%, 100% { opacity: 0.4; transform: translate(var(--x, 0), var(--y, 0)) scale(1); }
   50% { opacity: 0.9; transform: translate(var(--x, 0), calc(var(--y, 0) - 8px)) scale(1.1); }
+}
+
+/* 今日状态条 */
+.today-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-warm-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2xl);
+}
+
+.strip-dots {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.strip-dot {
+  padding: 0.2em 0.7em;
+  font-size: var(--text-xs);
+  border-radius: var(--radius-full);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-lighter);
+}
+
+.strip-dot.on {
+  border-style: solid;
+  border-color: var(--color-sage);
+  background: rgba(122, 143, 106, 0.12);
+  color: var(--color-sage);
+}
+
+.strip-dot.on::before {
+  content: '✓ ';
+}
+
+.strip-link {
+  font-size: var(--text-sm);
+  color: var(--color-gold-dark);
 }
 
 /* 今日凝视 */
@@ -764,6 +895,49 @@ onMounted(async () => {
 .step-icon { font-size: var(--text-xl); }
 .step-label { font-size: var(--text-sm); }
 
+/* 生侧指标：只统计"做过了什么"，不统计"凝视了几天" */
+.life-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.life-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-md) var(--space-sm);
+  background: rgba(194, 149, 107, 0.07);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background var(--transition-fast);
+}
+
+.life-stat:hover {
+  background: rgba(194, 149, 107, 0.14);
+}
+
+.life-stat strong {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--color-gold-dark);
+  line-height: 1.2;
+}
+
+.life-stat span {
+  font-size: var(--text-xs);
+  color: var(--color-text-light);
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .life-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .journey-hint {
   margin-top: var(--space-lg);
   font-size: var(--text-sm);
@@ -864,9 +1038,148 @@ onMounted(async () => {
 
 .all-links a:hover { color: var(--color-gold-dark); }
 
+.ritual-section { margin: var(--space-3xl) 0; }
+
+.ritual-sub {
+  text-align: center;
+  color: var(--color-text-light);
+  margin: calc(-1 * var(--space-md)) 0 var(--space-xl);
+}
+
+.ritual-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  .ritual-grid {
+    grid-template-columns: 1fr 1fr;
+    max-width: 900px;
+    align-items: start;
+  }
+}
+
 @media (max-width: 768px) {
   .hero { flex-direction: column; text-align: center; min-height: auto; }
   .hero__actions { justify-content: center; }
   .hero__visual { display: none; }
+}
+
+/* ── 到期回访 ── */
+/* 刻意不用红色/警告色：到期不是过错，只是一句提醒。惩罚色会让人回避整个页面 */
+.due-section {
+  max-width: 720px;
+  margin: 0 auto var(--space-2xl);
+  padding: var(--space-lg) var(--space-xl);
+  background: linear-gradient(135deg, rgba(194, 149, 107, 0.14), rgba(139, 157, 131, 0.1));
+  border-left: 3px solid var(--color-gold);
+  border-radius: var(--radius-md);
+}
+
+.due-eyebrow {
+  font-size: var(--text-xs);
+  letter-spacing: 0.2em;
+  color: var(--color-gold-dark);
+  margin-bottom: var(--space-md);
+}
+
+.due-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.due-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.due-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.due-main {
+  min-width: 0;
+}
+
+.due-action {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--color-text);
+  text-decoration: none;
+  line-height: 1.5;
+}
+
+a.due-action:hover {
+  color: var(--color-gold-dark);
+  text-decoration: underline;
+}
+
+.due-from {
+  font-size: var(--text-xs);
+  color: var(--color-text-light);
+  margin-top: 2px;
+}
+
+.due-ops {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-xs);
+}
+
+.due-btn {
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.due-btn--done {
+  background: var(--color-gold-dark);
+  border: 1px solid var(--color-gold-dark);
+  color: #fff;
+}
+
+.due-btn--done:hover {
+  background: var(--color-ink);
+}
+
+.due-btn--later {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-light);
+}
+
+.due-btn--later:hover {
+  border-color: var(--color-text-light);
+}
+
+.due-foot {
+  margin-top: var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-light);
+}
+
+.due-foot a {
+  color: var(--color-gold-dark);
+}
+
+@media (max-width: 560px) {
+  .due-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>

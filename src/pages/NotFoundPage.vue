@@ -4,7 +4,13 @@
       <span class="not-found-emoji">🕯️</span>
       <h1>页面不存在</h1>
       <p>这个页面可能已经消逝，但还有更多值得探索的内容。</p>
-      <router-link to="/" class="warm-btn warm-btn--primary">返回首页</router-link>
+      <p class="not-found-turn">
+        就像人一样：一个去处消失了，能做的只有回到还在的地方。
+      </p>
+      <div class="not-found-actions">
+        <router-link to="/" class="warm-btn warm-btn--primary">回到今天</router-link>
+        <router-link to="/letters" class="warm-btn warm-btn--ghost">给重要的人写句话</router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -38,6 +44,36 @@
   color: var(--color-text-light);
   margin-bottom: var(--space-xl);
   line-height: 1.7;
+}
+
+.not-found-turn {
+  font-family: var(--font-heading);
+  color: var(--color-gold-dark);
+}
+
+.not-found-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.warm-btn--ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.75rem;
+  font-size: var(--text-base);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold-dark);
+  text-decoration: none;
+  transition: all var(--transition-base);
+}
+
+.warm-btn--ghost:hover {
+  background: var(--color-gold);
+  color: #fff;
 }
 
 .warm-btn--primary {

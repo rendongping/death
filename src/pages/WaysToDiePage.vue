@@ -10,13 +10,10 @@
     />
 
     <!-- Crisis banner -->
-    <section class="crisis-banner">
-      <span class="crisis-icon">🆘</span>
-      <div class="crisis-body">
-        <strong>如果你此刻感到痛苦、绝望或有自伤念头：</strong>
-        请立即求助——你并不孤单。全国心理援助热线 <a href="tel:4001619995">400-161-9995</a>、北京心理危机研究与干预中心 <a href="tel:01082951332">010-82951332</a>（24 小时）。
-      </div>
-    </section>
+    <CrisisCard
+      leadText="如果你此刻感到痛苦、绝望或有自伤念头："
+      note="请立即求助——你并不孤单，24 小时有人倾听。"
+    />
 
     <!-- Intro: definition & analysis -->
     <section v-if="!loading && intro" class="intro-section">
@@ -113,6 +110,11 @@
 
       <section class="gaze-section">
         <p class="gaze-text">你已经凝视了死亡 <strong>{{ gazeCount }}</strong> 次。现在，请回到生活。</p>
+        <div class="gaze-exits">
+          <router-link to="/bucketlist" class="gaze-exit">写下一件今天要做的事 →</router-link>
+          <router-link to="/letters" class="gaze-exit">给重要的人写封信 →</router-link>
+          <router-link to="/advance-directives" class="gaze-exit">记下我的意愿 →</router-link>
+        </div>
       </section>
 
       <section class="closing">
@@ -142,14 +144,10 @@
         </div>
       </section>
 
-      <section class="crisis-banner crisis-banner--bottom">
-        <span class="crisis-icon">🆘</span>
-        <div class="crisis-body">
-          如果你或身边的人正在经历心理危机，请拨打
-          <a href="tel:4001619995">400-161-9995</a> 或
-          <a href="tel:01082951332">010-82951332</a>，24 小时有人倾听。
-        </div>
-      </section>
+      <CrisisCard
+        class="crisis-banner--bottom"
+        note="如果你或身边的人正在经历心理危机，24 小时有人倾听。"
+      />
     </template>
 
     <!-- Detail modal -->
@@ -192,6 +190,16 @@
               </div>
               <p>{{ activeEntry.story.summary }}</p>
             </div>
+
+            <!-- 生之出口：每一条死法都必须落回今天的一个动作 -->
+            <TurnCard
+              eyebrow="所以，回到生活"
+              :question="wayExit.living"
+              :action="wayExit.action"
+              source-type="way"
+              :source-slug="activeEntry.id"
+              :source-title="activeEntry.name"
+            />
           </div>
         </div>
       </div>
@@ -202,14 +210,18 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import PageHero from '@/components/ui/PageHero.vue'
+import CrisisCard from '@/components/ui/CrisisCard.vue'
+import TurnCard from '@/components/interactive/TurnCard.vue'
+import { resolveWayExit } from '@/data/ways-to-live'
 import { loadJSON, saveJSON } from '@/utils/storage'
+import { KEYS } from '@/utils/keys'
 
 const data = ref(null)
 const loading = ref(true)
 const activeCategory = ref('all')
 const activeEntry = ref(null)
-const gazeCount = ref(loadJSON('mv-ways-gaze', 0))
-const wishes = ref(loadJSON('mv-life-wishes', []))
+const gazeCount = ref(loadJSON(KEYS.WAYS_GAZE, 0))
+const wishes = ref(loadJSON(KEYS.LIFE_WISHES, []))
 const newWish = ref('')
 
 onMounted(async () => {
@@ -243,6 +255,9 @@ const activeDesc = computed(() => {
   return cat ? cat.desc : ''
 })
 
+// 当前条目的生之出口
+const wayExit = computed(() => resolveWayExit(activeEntry.value || {}))
+
 function categoryColor(key) {
   const cat = categories.value.find(c => c.key === key)
   return cat?.color || '#C2956B'
@@ -267,7 +282,7 @@ function shortPrevention(text) {
 function openEntry(entry) {
   activeEntry.value = entry
   gazeCount.value += 1
-  saveJSON('mv-ways-gaze', gazeCount.value)
+  saveJSON(KEYS.WAYS_GAZE, gazeCount.value)
   document.body.style.overflow = 'hidden'
 }
 
@@ -281,7 +296,7 @@ function addWish() {
   if (!text) return
   wishes.value.push(text)
   newWish.value = ''
-  saveJSON('mv-life-wishes', wishes.value)
+  saveJSON(KEYS.LIFE_WISHES, wishes.value)
 }
 </script>
 
@@ -475,6 +490,29 @@ function addWish() {
   color: var(--color-dusty-rose);
   font-size: var(--text-2xl);
   margin: 0 var(--space-xs);
+}
+
+.gaze-exits {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.gaze-exit {
+  font-size: var(--text-sm);
+  color: var(--color-gold-dark);
+  text-decoration: none;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-gold);
+  border-radius: var(--radius-full);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.gaze-exit:hover {
+  background: var(--color-gold);
+  color: #fff;
 }
 
 /* ── Life Wall ── */

@@ -40,6 +40,19 @@
       </WarmButton>
     </div>
 
+    <!-- 完成一条 = 生命日历上点亮一格 -->
+    <Transition name="fade">
+      <p v-if="litThisTime !== null" class="lit-note" @click="litThisTime = null">
+        <template v-if="litThisTime >= 0">
+          ✦ 已在你生命的第 {{ litThisTime + 1 }} 周点亮一格
+        </template>
+        <template v-else>
+          ✦ 这件事记下了。填了生日，它就会点亮生命日历上的一格
+        </template>
+        —— <router-link to="/calendar">去看看那张图 →</router-link>
+      </p>
+    </Transition>
+
     <!-- 未完成列表 -->
     <div v-if="pendingItems.length" class="items-section">
       <h2 class="items-heading">还没做的 ({{ pendingItems.length }})</h2>
@@ -114,9 +127,10 @@ import { ref, computed } from 'vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
-import { loadJSON, saveJSON } from '@/utils/storage'
+import { useBucketlistStore } from '@/stores/bucketlist'
+import { weekIndexOf, lightUpWeek } from '@/utils/week-of-life'
 
-const STORAGE_KEY = 'mv-bucketlist'
+const litThisTime = ref(null)
 
 const categories = [
   {
@@ -151,61 +165,43 @@ const categories = [
   }
 ]
 
+const bucketlist = useBucketlistStore()
+
 const newItemTitle = ref('')
 const newItemCategory = ref('experience')
-const items = ref(loadJSON(STORAGE_KEY, []))
 
-const pendingItems = computed(() =>
-  items.value.filter(i => !i.done).sort((a, b) => b.createdAt - a.createdAt)
-)
-const completedItems = computed(() =>
-  items.value.filter(i => i.done).sort((a, b) => b.completedAt - a.completedAt)
-)
-
-function save() {
-  saveJSON(STORAGE_KEY, items.value)
-}
+// 数据只由 store 持有一份，组件不再自己 loadJSON/saveJSON
+const pendingItems = computed(() => bucketlist.pendingItems)
+const completedItems = computed(() => bucketlist.completedItems)
 
 function addItem() {
   const title = newItemTitle.value.trim()
   if (!title) return
-  items.value.push({
-    id: Date.now(),
-    title,
-    category: newItemCategory.value,
-    note: '',
-    done: false,
-    createdAt: Date.now(),
-    completedAt: null
-  })
+  bucketlist.addItem(title, '', newItemCategory.value)
   newItemTitle.value = ''
-  save()
 }
 
 function addExample(categoryId, title) {
-  items.value.push({
-    id: Date.now(),
-    title,
-    category: categoryId,
-    note: '',
-    done: false,
-    createdAt: Date.now(),
-    completedAt: null
-  })
-  save()
+  bucketlist.addItem(title, '', categoryId)
 }
 
 function toggleItem(id) {
-  const item = items.value.find(i => i.id === id)
-  if (!item) return
-  item.done = !item.done
-  item.completedAt = item.done ? Date.now() : null
-  save()
+  const item = bucketlist.items.find(i => i.id === id)
+  const wasDone = item?.done
+  bucketlist.toggleItem(id)
+  // 划掉一条遗愿，等于在生命日历上点亮一格：让「做到了」留下可见痕迹
+  if (!wasDone) {
+    const week = weekIndexOf()
+    litThisTime.value = week === null ? -1 : week
+    if (week !== null) lightUpWeek(week)
+  } else {
+    litThisTime.value = null
+  }
 }
 
 function deleteItem(id) {
-  items.value = items.value.filter(i => i.id !== id)
-  save()
+  bucketlist.deleteItem(id)
+  litThisTime.value = null
 }
 
 function formatDate(ts) {
@@ -278,6 +274,22 @@ function getCategoryName(categoryId) {
 .example-tag:hover {
   background: var(--color-border-light);
   border-color: var(--color-gold);
+  color: var(--color-gold-dark);
+}
+
+.lit-note {
+  padding: var(--space-md) var(--space-lg);
+  margin: var(--space-md) 0 var(--space-xl);
+  background: rgba(122, 143, 106, 0.1);
+  border-left: 3px solid var(--color-sage);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  color: var(--color-text-light);
+  cursor: pointer;
+}
+
+.lit-note a {
   color: var(--color-gold-dark);
 }
 

@@ -51,8 +51,9 @@ import { ref, computed } from 'vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
 import { loadJSON, saveJSON } from '@/utils/storage'
+import { KEYS } from '@/utils/keys'
 
-const STORAGE_KEY = 'mv-gratitude'
+const STORAGE_KEY = KEYS.GRATITUDE
 
 const placeholders = [
   '例如：早上的一杯热咖啡',

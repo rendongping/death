@@ -2,6 +2,10 @@
   <div class="story-detail-page">
     <router-link to="/stories" class="back-link">← 返回故事列表</router-link>
     <div v-if="loading" class="loading">正在加载...</div>
+    <div v-else-if="missing" class="loading">
+      <p>没有这个故事。它可能已经改名，或者链接写错了。</p>
+      <router-link to="/stories" class="back-link">← 回到故事列表</router-link>
+    </div>
     <article v-else class="story">
       <header class="story-header">
         <div class="story-hero">
@@ -18,6 +22,22 @@
         <h1 class="story-title">{{ title }}</h1>
       </header>
       <div class="story-content" v-html="html"></div>
+
+      <!-- 生之出口：读完故事，把情绪变成行动 -->
+      <TurnCard
+        :question="storyTurn.question"
+        :action="storyTurn.action"
+        source-type="story"
+        :source-slug="route.params.slug"
+        :source-title="title"
+      />
+
+      <CrisisCard
+        v-if="showCrisis"
+        class="story-crisis"
+        note="故事里的人走出来了，你不一定非得一个人走。可以打个电话。"
+      />
+
       <div class="paper-boat">
         <button class="boat-btn" :class="{ active: isFav }" @click="toggleFav">
           <span class="boat-icon">{{ isFav ? '⛵' : '📄' }}</span>
@@ -34,6 +54,10 @@ import { useRoute } from 'vue-router'
 import { useContent } from '@/composables/useContent'
 import Illustration from '@/components/ui/Illustration.vue'
 import { useFavoritesStore } from '@/stores/favorites'
+import { resolveTurn } from '@/data/turns'
+import TurnCard from '@/components/interactive/TurnCard.vue'
+import CrisisCard from '@/components/ui/CrisisCard.vue'
+import { needsCrisis } from '@/utils/crisis'
 
 const route = useRoute()
 const html = ref('')
@@ -43,9 +67,29 @@ const category = ref('')
 const image = ref('')
 const readingTime = ref(0)
 const loading = ref(true)
+const missing = ref(false)
+const metadata = ref({})
+const rawContent = ref('')
 
 const favoritesStore = useFavoritesStore()
 const isFav = computed(() => favoritesStore.isFavorite('stories', route.params.slug))
+
+const showCrisis = computed(() => needsCrisis(metadata.value, rawContent.value))
+
+// 故事读完后，若出口指向信件，则带着故事标题预填，让情绪当场有去处
+const storyTurn = computed(() => {
+  const t = resolveTurn(metadata.value, route.params.slug)
+  if (t.action && t.action.link === '/letters') {
+    return {
+      ...t,
+      action: {
+        ...t.action,
+        link: `/letters?subject=${encodeURIComponent('读完《' + title.value + '》想对你说')}&body=${encodeURIComponent('读完《' + title.value + '》，我想起你。\n\n')}`
+      }
+    }
+  }
+  return t
+})
 
 function toggleFav() {
   favoritesStore.toggle('stories', route.params.slug)
@@ -53,6 +97,7 @@ function toggleFav() {
 
 async function load() {
   loading.value = true
+  missing.value = false
   const { loadStory } = useContent()
   const result = await loadStory(route.params.slug)
   if (result) {
@@ -62,9 +107,13 @@ async function load() {
     image.value = result.metadata.image || ''
     html.value = result.html
     readingTime.value = result.readingTime || 0
+    metadata.value = result.metadata || {}
+    rawContent.value = result.rawContent || ''
     if (title.value) {
       document.title = `${title.value} — Memento Vivere`
     }
+  } else {
+    missing.value = true
   }
   loading.value = false
 }
@@ -221,6 +270,10 @@ watch(() => route.params.slug, load)
 .paper-boat {
   margin: var(--space-3xl) 0 var(--space-2xl);
   text-align: center;
+}
+
+.story-crisis {
+  margin: var(--space-2xl) 0;
 }
 
 .boat-btn {

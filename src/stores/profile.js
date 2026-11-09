@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { loadJSON, saveJSON } from '@/utils/storage'
+import { KEYS } from '@/utils/keys'
 
 export const useProfileStore = defineStore('profile', () => {
-  const STORAGE_KEY = 'mv-profile'
+  const STORAGE_KEY = KEYS.PROFILE
   const profile = ref(loadJSON(STORAGE_KEY, {
     name: '',
     birthdate: '',

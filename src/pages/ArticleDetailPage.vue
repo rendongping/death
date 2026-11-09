@@ -7,6 +7,11 @@
 
     <div v-if="loading" class="loading">正在加载...</div>
 
+    <div v-else-if="missing" class="loading">
+      <p>没有这篇文章。它可能已经改名，或者链接写错了。</p>
+      <router-link to="/articles" class="back-link">← 回到文章列表</router-link>
+    </div>
+
     <article v-else class="article">
       <header class="article-header">
         <div class="article-hero">
@@ -15,7 +20,9 @@
             <Illustration name="stories" :width="200" :height="130" />
           </div>
         </div>
-        <span class="article-act">第一幕 · 晨光 · 觉知</span>
+        <span v-if="act" class="article-act" :style="{ color: act.accentDark }">
+          第{{ ['一', '二', '三', '四'][act.id - 1] }}幕 · {{ act.time }} · {{ act.short }}
+        </span>
         <h1 class="article-title">{{ title }}</h1>
         <div class="article-meta">
           <span v-if="date">{{ date }}</span>
@@ -36,6 +43,22 @@
       </nav>
 
       <div class="article-content" v-html="html"></div>
+
+      <!-- 生之出口：临终之问 + 行动 -->
+      <TurnCard
+        :question="turn.question"
+        :action="turn.action"
+        source-type="article"
+        :source-slug="slug"
+        :source-title="metadata.title"
+      />
+
+      <!-- 读到撑不住的内容时，号码要自己出现在屏幕上 -->
+      <CrisisCard
+        v-if="showCrisis"
+        class="article-crisis"
+        note="如果这篇让你想起了自己的事，先别硬扛，打个电话。"
+      />
 
       <!-- 纸船收藏 -->
       <div class="paper-boat">
@@ -69,7 +92,12 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useContent } from '@/composables/useContent'
 import { useFavoritesStore } from '@/stores/favorites'
+import { inferAct } from '@/data/acts'
+import { resolveTurn } from '@/data/turns'
 import Illustration from '@/components/ui/Illustration.vue'
+import TurnCard from '@/components/interactive/TurnCard.vue'
+import CrisisCard from '@/components/ui/CrisisCard.vue'
+import { needsCrisis } from '@/utils/crisis'
 
 const route = useRoute()
 const html = ref('')
@@ -80,11 +108,27 @@ const image = ref('')
 const readingTime = ref(0)
 const rawContent = ref('')
 const loading = ref(true)
+const missing = ref(false)
 const nightMode = ref(false)
 const progress = ref(0)
 const allArticles = ref([])
+const metadata = ref({})
 
 const favoritesStore = useFavoritesStore()
+
+const act = computed(() =>
+  inferAct({
+    act: metadata.value.act,
+    category: metadata.value.category,
+    slug: route.params.slug
+  })
+)
+
+const turn = computed(() =>
+  resolveTurn(metadata.value, route.params.slug)
+)
+
+const showCrisis = computed(() => needsCrisis(metadata.value, rawContent.value))
 
 const toc = computed(() => {
   const lines = rawContent.value.split('\n')
@@ -123,6 +167,7 @@ function updateProgress() {
 
 async function load() {
   loading.value = true
+  missing.value = false
   const { loadArticle, loadAllArticles } = useContent()
   const result = await loadArticle(route.params.slug)
   if (result) {
@@ -132,10 +177,13 @@ async function load() {
     image.value = result.metadata.image || ''
     html.value = result.html
     rawContent.value = result.rawContent || ''
+    metadata.value = result.metadata || {}
     readingTime.value = result.readingTime || 0
     if (title.value) {
       document.title = `${title.value} — Memento Vivere`
     }
+  } else {
+    missing.value = true
   }
   allArticles.value = await loadAllArticles()
   loading.value = false
@@ -378,6 +426,10 @@ watch(() => route.params.slug, load)
 .paper-boat {
   margin: var(--space-3xl) 0 var(--space-2xl);
   text-align: center;
+}
+
+.article-crisis {
+  margin: var(--space-2xl) 0;
 }
 
 .boat-btn {

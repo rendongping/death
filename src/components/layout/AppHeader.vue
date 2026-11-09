@@ -6,28 +6,40 @@
         <span class="logo-text">Memento Vivere</span>
       </router-link>
       <nav class="nav-links">
+        <router-link to="/today" class="nav-link nav-link--today">今日</router-link>
+        <router-link to="/acts" class="nav-link">四幕</router-link>
         <router-link to="/articles" class="nav-link">文章</router-link>
         <router-link to="/stories" class="nav-link">故事</router-link>
         <router-link to="/poetry" class="nav-link">诗</router-link>
         <router-link to="/practices" class="nav-link">练习</router-link>
-        <router-link to="/calendar" class="nav-link">日历</router-link>
-        <router-link to="/bucketlist" class="nav-link">遗愿</router-link>
-        <router-link to="/letters" class="nav-link">信件</router-link>
         <div class="nav-dropdown">
           <button class="nav-link nav-dropdown-toggle" @click="moreOpen = !moreOpen">
-            更多
+            我的<span v-if="dueCount" class="nav-badge">{{ dueCount }}</span>
           </button>
           <Transition name="fade">
             <div v-if="moreOpen" class="nav-dropdown-menu" @mouseleave="moreOpen = false">
-              <router-link to="/poetry/archive" class="dropdown-link" @click="moreOpen = false">悼亡诗词库</router-link>
-              <router-link to="/ways-to-die" class="dropdown-link" @click="moreOpen = false">一万种死法</router-link>
-              <router-link to="/memorial" class="dropdown-link" @click="moreOpen = false">哀悼空间</router-link>
-              <router-link to="/advance-directives" class="dropdown-link" @click="moreOpen = false">我的意愿</router-link>
-              <router-link to="/gratitude" class="dropdown-link" @click="moreOpen = false">感恩时刻</router-link>
+              <p class="dropdown-group">我在这里留下的</p>
+              <router-link
+                v-for="l in mineLinks"
+                :key="l.to"
+                :to="l.to"
+                class="dropdown-link"
+                @click="moreOpen = false"
+              >
+                {{ l.name }}
+                <span v-if="l.to === '/commitments' && dueCount" class="dropdown-badge">{{ dueCount }}</span>
+              </router-link>
+              <p class="dropdown-group">继续看</p>
+              <router-link
+                v-for="l in moreLinks"
+                :key="l.to"
+                :to="l.to"
+                class="dropdown-link"
+                @click="moreOpen = false"
+              >{{ l.name }}</router-link>
             </div>
           </Transition>
         </div>
-        <router-link to="/recommendations" class="nav-link">推荐</router-link>
         <router-link to="/about" class="nav-link">关于</router-link>
       </nav>
       <button class="mobile-menu-btn" @click="menuOpen = !menuOpen" aria-label="菜单">
@@ -36,19 +48,29 @@
     </div>
     <Transition name="fade">
       <nav v-if="menuOpen" class="mobile-nav" @click="menuOpen = false">
+        <router-link to="/today" class="mobile-nav-link">今日一页</router-link>
+        <router-link to="/acts" class="mobile-nav-link">四幕剧</router-link>
         <router-link to="/articles" class="mobile-nav-link">文章</router-link>
         <router-link to="/stories" class="mobile-nav-link">故事</router-link>
         <router-link to="/poetry" class="mobile-nav-link">诗</router-link>
         <router-link to="/practices" class="mobile-nav-link">练习</router-link>
-        <router-link to="/calendar" class="mobile-nav-link">生命日历</router-link>
-        <router-link to="/bucketlist" class="mobile-nav-link">遗愿清单</router-link>
-        <router-link to="/letters" class="mobile-nav-link">信件</router-link>
-        <router-link to="/poetry/archive" class="mobile-nav-link">悼亡诗词库</router-link>
-        <router-link to="/ways-to-die" class="mobile-nav-link">一万种死法</router-link>
-        <router-link to="/memorial" class="mobile-nav-link">哀悼空间</router-link>
-        <router-link to="/advance-directives" class="mobile-nav-link">我的意愿</router-link>
-        <router-link to="/gratitude" class="mobile-nav-link">感恩时刻</router-link>
-        <router-link to="/recommendations" class="mobile-nav-link">推荐</router-link>
+        <p class="mobile-nav-group">我在这里留下的</p>
+        <router-link
+          v-for="l in mineLinks"
+          :key="l.to"
+          :to="l.to"
+          class="mobile-nav-link"
+        >
+          {{ l.name }}
+          <span v-if="l.to === '/commitments' && dueCount" class="dropdown-badge">{{ dueCount }}</span>
+        </router-link>
+        <p class="mobile-nav-group">继续看</p>
+        <router-link
+          v-for="l in moreLinks"
+          :key="l.to"
+          :to="l.to"
+          class="mobile-nav-link"
+        >{{ l.name }}</router-link>
         <router-link to="/about" class="mobile-nav-link">关于</router-link>
       </nav>
     </Transition>
@@ -56,10 +78,30 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useCommitmentsStore } from '@/stores/commitments'
 
 const menuOpen = ref(false)
 const moreOpen = ref(false)
+
+const commitments = useCommitmentsStore()
+const dueCount = computed(() => commitments.due.length)
+
+const mineLinks = [
+  { to: '/commitments', name: '我的约定' },
+  { to: '/calendar', name: '生命日历' },
+  { to: '/bucketlist', name: '遗愿清单' },
+  { to: '/letters', name: '信件' },
+  { to: '/advance-directives', name: '我的意愿' },
+  { to: '/gratitude', name: '感恩时刻' },
+  { to: '/memorial', name: '哀悼空间' }
+]
+
+const moreLinks = [
+  { to: '/ways-to-die', name: '一万种死法' },
+  { to: '/poetry/archive', name: '悼亡诗词库' },
+  { to: '/recommendations', name: '推荐' }
+]
 </script>
 
 <style scoped>
@@ -129,6 +171,27 @@ const moreOpen = ref(false)
   background: rgba(194, 149, 107, 0.08);
 }
 
+/* 「今日」是主入口，视觉上要压过其他导航项 */
+.nav-link--today {
+  color: var(--color-gold-dark);
+  border: 1px solid rgba(194, 149, 107, 0.45);
+}
+
+/* 到期数量角标：全站唯一需要"被看见"的提醒 */
+.nav-badge,
+.dropdown-badge {
+  display: inline-block;
+  min-width: 1.15em;
+  margin-left: 4px;
+  padding: 0 4px;
+  background: var(--color-gold);
+  color: #fff;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  border-radius: var(--radius-full);
+  text-align: center;
+}
+
 /* 下拉菜单 */
 .nav-dropdown {
   position: relative;
@@ -150,12 +213,28 @@ const moreOpen = ref(false)
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   padding: var(--space-sm);
-  min-width: 140px;
+  min-width: 160px;
   z-index: 101;
 }
 
+.dropdown-group {
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  color: var(--color-text-light);
+}
+
+.dropdown-group:not(:first-child) {
+  margin-top: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+
 .dropdown-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
   font-size: var(--text-sm);
   color: var(--color-text-light);
@@ -202,7 +281,9 @@ const moreOpen = ref(false)
 }
 
 .mobile-nav-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   padding: var(--space-md);
   font-size: var(--text-lg);
   color: var(--color-text);
@@ -212,6 +293,13 @@ const moreOpen = ref(false)
 
 .mobile-nav-link:hover {
   background: rgba(194, 149, 107, 0.08);
+}
+
+.mobile-nav-group {
+  padding: var(--space-sm) var(--space-md) 0;
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  color: var(--color-text-light);
 }
 
 @media (max-width: 768px) {

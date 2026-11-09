@@ -2,6 +2,10 @@
   <div class="practice-detail-page">
     <router-link to="/practices" class="back-link">← 返回练习列表</router-link>
     <div v-if="loading" class="loading">正在加载...</div>
+    <div v-else-if="missing" class="loading">
+      <p>没有这个练习。它可能已经改名，或者链接写错了。</p>
+      <router-link to="/practices" class="back-link">← 回到练习列表</router-link>
+    </div>
     <article v-else class="practice">
       <header class="practice-header">
         <div class="practice-hero">
@@ -19,6 +23,17 @@
         <h1 class="practice-title">{{ title }}</h1>
       </header>
       <div class="practice-content" v-html="html"></div>
+
+      <!-- 练习本身就是行动，做完之后需要一个「下一步」 -->
+      <TurnCard
+        eyebrow="做完了，然后呢"
+        :question="practiceTurn.question"
+        :action="practiceTurn.action"
+        source-type="practice"
+        :source-slug="route.params.slug"
+        :source-title="title"
+      />
+
       <div class="paper-boat">
         <button class="boat-btn" :class="{ active: isFav }" @click="toggleFav">
           <span class="boat-icon">{{ isFav ? '⛵' : '📄' }}</span>
@@ -34,7 +49,9 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useContent } from '@/composables/useContent'
 import Illustration from '@/components/ui/Illustration.vue'
+import TurnCard from '@/components/interactive/TurnCard.vue'
 import { useFavoritesStore } from '@/stores/favorites'
+import { resolvePracticeTurn } from '@/data/turns'
 
 const route = useRoute()
 const html = ref('')
@@ -45,9 +62,15 @@ const difficulty = ref('')
 const image = ref('')
 const readingTime = ref(0)
 const loading = ref(true)
+const missing = ref(false)
+const metadata = ref({})
 
 const favoritesStore = useFavoritesStore()
 const isFav = computed(() => favoritesStore.isFavorite('practices', route.params.slug))
+
+const practiceTurn = computed(() =>
+  resolvePracticeTurn(metadata.value, route.params.slug)
+)
 
 function toggleFav() {
   favoritesStore.toggle('practices', route.params.slug)
@@ -55,6 +78,7 @@ function toggleFav() {
 
 async function load() {
   loading.value = true
+  missing.value = false
   const { loadPractice } = useContent()
   const result = await loadPractice(route.params.slug)
   if (result) {
@@ -65,9 +89,12 @@ async function load() {
     image.value = result.metadata.image || ''
     html.value = result.html
     readingTime.value = result.readingTime || 0
+    metadata.value = result.metadata || {}
     if (title.value) {
       document.title = `${title.value} — Memento Vivere`
     }
+  } else {
+    missing.value = true
   }
   loading.value = false
 }

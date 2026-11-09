@@ -35,6 +35,19 @@
         <p class="rec-creator">{{ item.creator }}</p>
         <p class="rec-desc">{{ item.description }}</p>
         <blockquote class="rec-quote">{{ item.quote }}</blockquote>
+        <!-- 推荐是「以后再看」的重灾区，每张卡都问一句：你打算什么时候 -->
+        <div class="rec-exit">
+          <p class="rec-question">{{ recTurn(item.category).question }}</p>
+          <CommitButton
+            :action="`安排看${item.title}`"
+            link="/calendar"
+            :question="recTurn(item.category).question"
+            source-type="recommendation"
+            :source-slug="`rec-${item.id}`"
+            :source-title="item.title"
+            compact
+          />
+        </div>
       </WarmCard>
     </div>
   </div>
@@ -44,6 +57,8 @@
 import { ref, computed } from 'vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import Illustration from '@/components/ui/Illustration.vue'
+import CommitButton from '@/components/interactive/CommitButton.vue'
+import { resolveRecTurn } from '@/data/turns'
 
 const categories = [
   { id: 'book', name: '书籍' },
@@ -53,6 +68,10 @@ const categories = [
 ]
 
 const activeCategory = ref('book')
+
+function recTurn(category) {
+  return resolveRecTurn(category)
+}
 
 const items = [
   {
@@ -310,5 +329,19 @@ function getCategoryName(id) {
   line-height: 1.6;
   padding-top: var(--space-md);
   border-top: 1px solid var(--color-border);
+}
+
+.rec-exit {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px dashed var(--color-border);
+  text-align: center;
+}
+
+.rec-question {
+  font-size: var(--text-sm);
+  color: var(--color-text-light);
+  line-height: 1.7;
+  margin-bottom: var(--space-sm);
 }
 </style>

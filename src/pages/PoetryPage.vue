@@ -158,6 +158,14 @@
             </p>
             <div class="modal-html" v-html="activePoem.html"></div>
             <button class="share-btn" @click="shareMdPoem">📜 抄一句带走</button>
+            <TurnCard
+              eyebrow="读完这首诗"
+              :question="poetryTurn.question"
+              :action="poetryTurn.action"
+              source-type="poem"
+              :source-slug="activePoem.metadata?.slug || activePoem.metadata?.title"
+              :source-title="activePoem.metadata?.title"
+            />
           </div>
         </div>
       </div>
@@ -176,6 +184,14 @@
               <p v-for="(line, li) in activeArchive.content" :key="li">{{ line }}</p>
             </div>
             <button class="share-btn" @click="shareArchivePoem">📜 抄一句带走</button>
+            <TurnCard
+              eyebrow="读完这首悼亡诗"
+              question="悼亡诗都是写给已经不在了的人。那此刻还在的人里，你有哪句话想趁早说？"
+              :action="{ text: '现在就说给 TA 听', link: '/letters' }"
+              source-type="archive"
+              :source-slug="activeArchive.id || activeArchive.title"
+              :source-title="activeArchive.title"
+            />
           </div>
         </div>
       </div>
@@ -185,9 +201,14 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import TurnCard from '@/components/interactive/TurnCard.vue'
 import { useContent } from '@/composables/useContent'
 import { generatePoemCard, downloadDataUrl } from '@/utils/shareImage'
+import { resolvePoetryTurn } from '@/data/turns'
+
+const route = useRoute()
 
 const PAGE_SIZE = 48
 
@@ -205,6 +226,13 @@ const activePoem = ref(null)
 const activePoemMeta = ref(null)
 const activeArchive = ref(null)
 const featured = ref(null)
+
+// 诗歌的出口按天轮转：同一天进来的人看到同一个问题，明天再读同一首会换一句
+const poetryTurn = computed(() => {
+  const d = new Date()
+  const dayOfYear = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000)
+  return resolvePoetryTurn(dayOfYear)
+})
 
 const fallbackCover = 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80'
 
@@ -411,6 +439,11 @@ onMounted(async () => {
     famousPoems.value = []
   }
   loading.value = false
+
+  // 今日一页选中的是诗时，用 ?open=slug 直接把它翻开，
+  // 否则用户跳过来只看到列表，等于没读完
+  const target = route.query.open
+  if (typeof target === 'string' && target) openMdPoem(target)
 })
 </script>
 

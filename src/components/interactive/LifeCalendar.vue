@@ -72,15 +72,18 @@
           }"
           :style="{ background: week.lived ? currentSeason?.color : '' }"
           :title="week.label"
-          @click="week.future ? openNoteForWeek(index) : null"
+          @click="handleWeekClick(index)"
         >
           <span v-if="week.note" class="week-note-dot">·</span>
+          <span v-if="week.livedMark" class="week-mark-dot">✦</span>
         </div>
       </div>
 
       <p class="calendar-caption">
         每一格代表一个星期。金色的是已经走过的，空白的是还等待你去书写的。
-        <br />点击未来的格子，为那一周许下一个心愿。
+        <br />点击未来的格子，为那一周许下一个心愿；点击已经走过的格子，点亮「这一周，我真正活过」。
+        <br v-if="weekMarks.length" />
+        <span v-if="weekMarks.length" class="lived-count">已点亮 {{ weekMarks.length }} 个真正活过的星期。</span>
       </p>
 
       <!-- 心愿弹窗 -->
@@ -128,12 +131,15 @@ import { ref, computed, watch } from 'vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
 import { loadJSON, saveJSON } from '@/utils/storage'
+import { KEYS } from '@/utils/keys'
+import { useBucketlistStore } from '@/stores/bucketlist'
+import { getBirthdate, setBirthdate, getWeekMarks, setWeekMarks } from '@/utils/week-of-life'
 import { downloadDataUrl } from '@/utils/shareImage'
 
-const STORAGE_KEY = 'mv-birthdate'
-const NOTES_KEY = 'mv-week-notes'
-const BUCKETLIST_KEY = 'mv-bucketlist'
+const NOTES_KEY = KEYS.WEEK_NOTES
 const LIFE_EXPECTANCY = 80
+
+const bucketlist = useBucketlistStore()
 
 const seasons = [
   { id: 'childhood', name: '童年', start: 0, end: 12, color: '#D4B08C', desc: '世界刚刚展开，一切都是新的。' },
@@ -143,9 +149,10 @@ const seasons = [
   { id: 'old-age', name: '老年', start: 65, end: 100, color: '#8B9D83', desc: '智慧、传承、与有限性温柔相处。' }
 ]
 
-const birthdate = ref(localStorage.getItem(STORAGE_KEY) || '')
+const birthdate = ref(getBirthdate())
 const birthdateInput = ref('')
 const weekNotes = ref(loadJSON(NOTES_KEY, {}))
+const weekMarks = ref(getWeekMarks())
 const showNoteModal = ref(false)
 const activeWeekIndex = ref(-1)
 const activeNote = ref('')
@@ -192,6 +199,7 @@ const calendarWeeks = computed(() => {
   const weeks = []
   const birth = birthDateObj.value
   if (!birth) return weeks
+  const markSet = new Set(weekMarks.value)
 
   for (let i = 0; i < totalWeeks.value; i++) {
     const weekStart = new Date(birth)
@@ -208,7 +216,8 @@ const calendarWeeks = computed(() => {
       future: !lived,
       label: `${year}岁 第${weekOfYear}周`,
       date: weekStart.toISOString().split('T')[0],
-      note: weekNotes.value[i] || null
+      note: weekNotes.value[i] || null,
+      livedMark: lived && markSet.has(i)
     })
   }
   return weeks
@@ -220,18 +229,11 @@ const activeWeekLabel = computed(() => {
   return w ? w.label : ''
 })
 
-const pendingBucketItems = computed(() => {
-  try {
-    const items = loadJSON(BUCKETLIST_KEY, [])
-    return items.filter(i => !i.done).slice(0, 10)
-  } catch {
-    return []
-  }
-})
+const pendingBucketItems = computed(() => bucketlist.pendingItems.slice(0, 10))
 
 function saveBirthdate() {
   birthdate.value = birthdateInput.value
-  localStorage.setItem(STORAGE_KEY, birthdateInput.value)
+  setBirthdate(birthdateInput.value)
 }
 
 function exportLifeMap() {
@@ -301,7 +303,7 @@ function exportLifeMap() {
 
 function resetBirthdate() {
   birthdate.value = ''
-  localStorage.removeItem(STORAGE_KEY)
+  setBirthdate('')
 }
 
 function openNoteForWeek(index) {
@@ -309,6 +311,24 @@ function openNoteForWeek(index) {
   activeNote.value = weekNotes.value[index] || ''
   selectedBucketItem.value = ''
   showNoteModal.value = true
+}
+
+function handleWeekClick(index) {
+  const week = calendarWeeks.value[index]
+  if (!week) return
+  if (week.future) {
+    openNoteForWeek(index)
+  } else {
+    toggleLivedMark(index)
+  }
+}
+
+// 点亮「这一周，我真正活过」
+function toggleLivedMark(index) {
+  const set = new Set(weekMarks.value)
+  if (set.has(index)) set.delete(index)
+  else set.add(index)
+  weekMarks.value = setWeekMarks([...set])
 }
 
 function fillFromBucketItem() {
@@ -480,6 +500,11 @@ watch(birthdate, () => {
 
 .week-cell--lived {
   background: var(--color-gold);
+  cursor: pointer;
+}
+
+.week-cell--lived:hover {
+  box-shadow: 0 0 0 2px rgba(194, 149, 107, 0.45);
 }
 
 .week-cell--current {
@@ -504,6 +529,21 @@ watch(birthdate, () => {
   font-size: 10px;
   color: #fff;
   font-weight: bold;
+}
+
+.week-mark-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  line-height: 1;
+  color: #FFF8F0;
+  text-shadow: 0 0 2px rgba(74, 55, 40, 0.6);
+}
+
+.lived-count {
+  color: var(--color-gold-dark);
+  font-weight: 500;
 }
 
 .calendar-caption {

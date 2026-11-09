@@ -77,8 +77,9 @@ import WarmCard from '@/components/ui/WarmCard.vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
 import Illustration from '@/components/ui/Illustration.vue'
 import { loadJSON, saveJSON } from '@/utils/storage'
+import { KEYS } from '@/utils/keys'
 
-const STORAGE_KEY = 'mv-advance-directives'
+const STORAGE_KEY = KEYS.ADVANCE_DIRECTIVES
 
 const questions = [
   {

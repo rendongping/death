@@ -69,25 +69,19 @@
 
       <section class="about-section about-resources">
         <h2>危机资源</h2>
-        <p class="resources-note">
-          如果你正在经历困难，请知道你不是一个人。
-        </p>
-        <div class="resource-card">
-          <strong>中国心理危机干预热线</strong>
-          <span class="resource-phone">400-161-9995</span>
-        </div>
-        <div class="resource-card">
-          <strong>北京心理危机研究与干预中心</strong>
-          <span class="resource-phone">010-82951332</span>
-        </div>
-        <div class="resource-card">
-          <strong>生命热线</strong>
-          <span class="resource-phone">400-821-1215</span>
-        </div>
+        <p class="safety-note">{{ safetyNote }}</p>
+        <CrisisCard />
       </section>
     </div>
   </div>
 </template>
+
+<script setup>
+import CrisisCard from '@/components/ui/CrisisCard.vue'
+import { SAFETY_NOTE } from '@/data/crisis-resources'
+
+const safetyNote = SAFETY_NOTE
+</script>
 
 <style scoped>
 .about-content {
@@ -138,26 +132,10 @@
   color: var(--color-gold-dark);
 }
 
-.resources-note {
-  color: var(--color-dusty-rose) !important;
-  font-weight: 500;
-}
-
-.resource-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-md) var(--space-lg);
-  background: var(--color-warm-white);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-sm);
-  border-left: 3px solid var(--color-dusty-rose);
-}
-
-.resource-phone {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--color-gold-dark);
+.safety-note {
+  color: var(--color-text-light);
+  font-size: var(--text-sm);
+  line-height: 1.8;
+  margin-bottom: var(--space-md);
 }
 </style>

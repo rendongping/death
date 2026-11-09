@@ -33,6 +33,14 @@
         <span>今年已过去 {{ yearPercent }}%</span>
       </div>
 
+      <div class="owned-row">
+        <p class="owned-text">
+          但别忘了：你已经<strong>拥有</strong>了 {{ livedDays }} 天、{{ fullMoons }} 轮满月。
+          <template v-if="doneWishes"> 已有 {{ doneWishes }} 个心愿被你亲手划掉。</template>
+        </p>
+        <router-link to="/calendar" class="owned-link">去日历点亮活过的日子 →</router-link>
+      </div>
+
       <div class="gaze-row">
         <span v-if="streak > 0" class="gaze-streak">已连续凝视 {{ streak }} 天</span>
         <span v-if="!hasGazedToday" class="gaze-reminder">今天还没有凝视死亡</span>
@@ -44,6 +52,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useGazeStore } from '@/stores/gaze'
+import { useBucketlistStore } from '@/stores/bucketlist'
+import { getBirthdate } from '@/utils/week-of-life'
 
 const LIFE_EXPECTANCY = 80
 
@@ -51,7 +61,7 @@ const gazeStore = useGazeStore()
 const streak = computed(() => gazeStore.streak)
 const hasGazedToday = computed(() => gazeStore.hasGazedToday)
 
-const birthdate = ref(localStorage.getItem('mv-birthdate') || '')
+const birthdate = ref(getBirthdate())
 const now = ref(new Date())
 let timer = null
 
@@ -66,6 +76,12 @@ const livedWeeks = computed(() => {
 const totalWeeks = LIFE_EXPECTANCY * 52
 const remainingWeeks = computed(() => Math.max(0, totalWeeks - livedWeeks.value))
 const lifePercent = computed(() => Math.min(100, Math.round(livedWeeks.value / totalWeeks * 100)))
+
+const livedDays = computed(() => livedWeeks.value * 7)
+const fullMoons = computed(() => Math.floor(livedWeeks.value * 7 / 29.53))
+
+const bucketlist = useBucketlistStore()
+const doneWishes = computed(() => bucketlist.completedItems.length)
 
 const todayPercent = computed(() => {
   const start = new Date(now.value)
@@ -170,6 +186,32 @@ onUnmounted(() => {
   font-size: var(--text-sm);
   color: var(--color-text-lighter);
   margin-bottom: var(--space-md);
+}
+
+.owned-row {
+  text-align: center;
+  padding-top: var(--space-md);
+  border-top: 1px dashed var(--color-border);
+}
+
+.owned-text {
+  font-size: var(--text-sm);
+  color: var(--color-text-light);
+  line-height: 1.8;
+  margin-bottom: var(--space-xs);
+}
+
+.owned-text strong {
+  color: var(--color-sage);
+}
+
+.owned-link {
+  font-size: var(--text-sm);
+  color: var(--color-gold-dark);
+}
+
+.owned-link:hover {
+  text-decoration: underline;
 }
 
 .granularity-dot {

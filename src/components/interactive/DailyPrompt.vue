@@ -16,7 +16,7 @@
         rows="3"
         placeholder="写下你的想法..."
       ></textarea>
-      <WarmButton @click="saveEntry" :disabled="!entry.trim()">
+      <WarmButton @click="submitEntry" :disabled="!entry.trim()">
         记录
       </WarmButton>
     </div>
@@ -43,9 +43,9 @@
 import { ref, computed } from 'vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
-import { loadJSON, saveJSON } from '@/utils/storage'
+import { useReflectionsStore } from '@/stores/reflections'
 
-const STORAGE_KEY = 'mv-reflections'
+const reflectionsStore = useReflectionsStore()
 
 const prompts = [
   '如果今天是你生命的最后一天，你会如何度过？',
@@ -95,11 +95,6 @@ const todayStr = computed(() => {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
 })
 
-const todayKey = computed(() => {
-  const d = new Date()
-  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
-})
-
 // 每日根据日期选一个问题
 const prompt = computed(() => {
   const d = new Date()
@@ -107,24 +102,15 @@ const prompt = computed(() => {
   return prompts[idx]
 })
 
-const reflections = ref(loadJSON(STORAGE_KEY, {}))
 const entry = ref('')
 
-const hasWrittenToday = computed(() => !!reflections.value[todayKey.value])
+const hasWrittenToday = computed(() => reflectionsStore.hasWrittenToday)
 
-const historyEntries = computed(() => {
-  return Object.entries(reflections.value)
-    .sort(([a], [b]) => b.localeCompare(a))
-    .map(([date, text]) => ({ date, text }))
-})
+const historyEntries = computed(() => reflectionsStore.historyEntries)
 
-function saveEntry() {
+function submitEntry() {
   if (!entry.value.trim()) return
-  reflections.value = {
-    ...reflections.value,
-    [todayKey.value]: entry.value.trim()
-  }
-  saveJSON(STORAGE_KEY, reflections.value)
+  reflectionsStore.saveEntry(entry.value)
   entry.value = ''
 }
 </script>

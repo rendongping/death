@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { loadJSON, saveJSON } from '@/utils/storage'
+import { KEYS } from '@/utils/keys'
 
 export const useFavoritesStore = defineStore('favorites', () => {
-  const STORAGE_KEY = 'mv-favorites'
+  const STORAGE_KEY = KEYS.FAVORITES
   const favorites = ref(loadJSON(STORAGE_KEY, { articles: [], stories: [], poems: [], ways: [], practices: [] }))
 
   function save() {

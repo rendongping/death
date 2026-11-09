@@ -3,6 +3,7 @@ title: "加缪《西西弗神话》：在荒诞中反抗，就是对生命说是
 date: "2026-08-01"
 category: "哲学思考"
 tags: ["加缪", "存在主义", "荒诞", "意义"]
+crisis: "on"
 author: "Memento Vivere"
 ---
 

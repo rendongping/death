@@ -72,6 +72,12 @@
         <WarmButton @click="startNewLetter">写一封新信</WarmButton>
       </div>
 
+      <Transition name="fade">
+        <p v-if="sealed" class="sealed-note" @click="sealed = ''">
+          ✦ {{ sealed }}
+        </p>
+      </Transition>
+
       <div v-if="letters.length === 0">
         <EmptyState
           icon="✉️"
@@ -125,18 +131,25 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
-import { loadJSON, saveJSON } from '@/utils/storage'
+import { useLettersStore } from '@/stores/letters'
 
-const STORAGE_KEY = 'mv-letters'
+const props = defineProps({
+  // 从别处（如故事页行动钩子）带过来的预填内容 { to, subject, body }
+  prefill: { type: Object, default: null }
+})
+
+const lettersStore = useLettersStore()
 
 const mode = ref('list')
-const letters = ref(loadJSON(STORAGE_KEY, []))
+// 信件只由 letters store 持有一份，编辑器不再自己 loadJSON/saveJSON
+const letters = computed(() => lettersStore.letters)
 const viewingLetter = ref(null)
 const selectedTemplate = ref('')
+const sealed = ref('')
 
 const todayStr = computed(() => new Date().toISOString().split('T')[0])
 
@@ -194,13 +207,7 @@ function applyTemplate(id) {
   }
 }
 
-const sortedLetters = computed(() =>
-  [...letters.value].sort((a, b) => b.createdAt - a.createdAt)
-)
-
-function save() {
-  saveJSON(STORAGE_KEY, letters.value)
-}
+const sortedLetters = computed(() => lettersStore.sortedLetters)
 
 function startNewLetter() {
   letter.value = { to: '', subject: '', body: '', deliverAt: '' }
@@ -209,24 +216,38 @@ function startNewLetter() {
 }
 
 function saveLetter() {
-  letters.value.push({
-    id: Date.now(),
-    ...letter.value,
-    createdAt: Date.now()
-  })
-  save()
+  lettersStore.addLetter({ ...letter.value })
+  // 写完要有回响，否则「写完就完了」，这封信从此只是一条列表记录
+  sealed.value = letter.value.deliverAt
+    ? `已封存。它会在 ${letter.value.deliverAt} 回到你手上。在此之前，你可以继续过今天。`
+    : '已封存。它不会自己消失，也不会自己寄出——什么时候打开，由你定。'
+  letter.value = { to: '', subject: '', body: '', deliverAt: '' }
   mode.value = 'list'
 }
 
 function deleteLetter(id) {
-  letters.value = letters.value.filter(l => l.id !== id)
+  lettersStore.deleteLetter(id)
   if (viewingLetter.value?.id === id) viewingLetter.value = null
-  save()
 }
 
 function viewLetter(l) {
   viewingLetter.value = l
 }
+
+function applyPrefill() {
+  if (!props.prefill) return
+  letter.value = {
+    to: props.prefill.to || '',
+    subject: props.prefill.subject || '',
+    body: props.prefill.body || '',
+    deliverAt: ''
+  }
+  selectedTemplate.value = ''
+  mode.value = 'write'
+}
+
+onMounted(applyPrefill)
+watch(() => props.prefill, applyPrefill)
 
 function isDelivered(l) {
   if (!l.deliverAt) return true
@@ -335,6 +356,18 @@ function formatDate(ts) {
   font-size: var(--text-xl);
   font-family: var(--font-body);
   color: var(--color-text);
+}
+
+.sealed-note {
+  padding: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-lg);
+  background: rgba(194, 149, 107, 0.1);
+  border-left: 3px solid var(--color-gold);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  color: var(--color-text-light);
+  cursor: pointer;
 }
 
 .letters-list {

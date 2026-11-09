@@ -8,6 +8,18 @@ const routes = [
     meta: { title: 'Memento Vivere — 记住要活着', description: '通过认识死亡，更好地活着。探索文章、诗歌、生命练习与善终准备。' }
   },
   {
+    path: '/today',
+    name: 'today',
+    component: () => import('@/pages/TodayPage.vue'),
+    meta: { title: '今日一页 — Memento Vivere', description: '凝视六十秒、读一篇、写一行、定一个日子。每天四步，不到十分钟。' }
+  },
+  {
+    path: '/acts',
+    name: 'acts',
+    component: () => import('@/pages/ActsPage.vue'),
+    meta: { title: '四幕剧 — Memento Vivere', description: '觉知、凝视、整理、告别——一条从死亡回到生活的路。' }
+  },
+  {
     path: '/articles',
     name: 'articles',
     component: () => import('@/pages/ArticleListPage.vue'),
@@ -36,6 +48,12 @@ const routes = [
     name: 'letters',
     component: () => import('@/pages/LettersPage.vue'),
     meta: { title: '信件 — Memento Vivere', description: '写给未来或他人的定时信件。' }
+  },
+  {
+    path: '/commitments',
+    name: 'commitments',
+    component: () => import('@/pages/CommitmentsPage.vue'),
+    meta: { title: '我的约定 — Memento Vivere', description: '每次读完讲死亡的内容，给自己定一个日子。到期它会回来找你。' }
   },
   {
     path: '/poetry',
@@ -121,6 +139,9 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
+    if (to.hash) {
+      return { el: to.hash, behavior: 'smooth' }
+    }
     if (savedPosition) {
       return savedPosition
     }

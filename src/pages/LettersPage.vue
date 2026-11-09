@@ -7,13 +7,24 @@
       </div>
       <Illustration name="letters" :width="160" :height="128" />
     </div>
-    <LetterEditor />
+    <LetterEditor :prefill="prefill" />
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import LetterEditor from '@/components/interactive/LetterEditor.vue'
 import Illustration from '@/components/ui/Illustration.vue'
+
+const route = useRoute()
+
+// 支持从故事页等带 ?to=&subject=&body= 直接预填并进入写信模式
+const prefill = computed(() => {
+  const { to, subject, body } = route.query
+  if (!to && !subject && !body) return null
+  return { to: to || '', subject: subject || '', body: body || '' }
+})
 </script>
 
 <style scoped>

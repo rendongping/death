@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { loadJSON, saveJSON } from '@/utils/storage'
+import { KEYS } from '@/utils/keys'
 
 export const useGazeStore = defineStore('gaze', () => {
-  const STORAGE_KEY = 'mv-gaze-log'
+  const STORAGE_KEY = KEYS.GAZE_LOG
   const log = ref(loadJSON(STORAGE_KEY, {}))
 
   function dateKey(d) {

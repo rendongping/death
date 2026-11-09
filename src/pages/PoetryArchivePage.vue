@@ -83,6 +83,16 @@
         @click="visibleCount += PAGE_SIZE"
       >加载更多（还剩 {{ filtered.length - visibleCount }} 首）</button>
 
+      <!-- 生之出口：两千多首悼亡诗都是写给不在的人，必须把读者送回还在的人身边 -->
+      <TurnCard
+        eyebrow="这一库里全是写给不在的人"
+        question="悼亡诗写得再好，收信人都读不到了。那此刻还在的人里，你有哪句话想趁早说？"
+        :action="{ text: '现在就说给 TA 听', link: '/letters' }"
+        source-type="archive"
+        source-slug="poetry-archive"
+        source-title="悼亡诗词库"
+      />
+
       <button v-show="showTop" class="to-top" @click="scrollTop" aria-label="回到顶部">↑</button>
     </template>
   </div>
@@ -90,6 +100,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import TurnCard from '@/components/interactive/TurnCard.vue'
 
 const PAGE_SIZE = 60
 

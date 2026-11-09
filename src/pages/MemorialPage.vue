@@ -62,20 +62,17 @@
       <p>这里还没有蜡烛。当你思念一个人时，可以在这里为 Ta 点亮一支蜡烛。</p>
     </div>
 
-    <div class="crisis-note">
-      <p>
-        如果你正在经历严重的情绪困扰，请记住：你不必独自面对。<br />
-        中国心理危机干预热线：<strong>400-161-9995</strong>
-      </p>
-    </div>
+    <CrisisCard note="如果你正在经历严重的情绪困扰，请记住：你不必独自面对。" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import { loadJSON, saveJSON } from '@/utils/storage'
+import { KEYS } from '@/utils/keys'
+import CrisisCard from '@/components/ui/CrisisCard.vue'
 
-const STORAGE_KEY = 'mv-memorial'
+const STORAGE_KEY = KEYS.MEMORIAL
 
 const entries = ref(loadJSON(STORAGE_KEY, []))
 const newEntry = ref({ name: '', message: '' })
