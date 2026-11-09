@@ -5,7 +5,7 @@ duration: "25分钟"
 difficulty: "中等"
 turn: "这些意愿写完了，有没有告诉那个真的会在病房里做决定的人？"
 action_text: "约 TA 谈一次这件事"
-action_link: "/commitments"
+action_link: "/advance-directives"
 ---
 
 ## 这份东西解决什么问题

@@ -27,6 +27,35 @@ export function pickByDayWhere(list, predicate, date = new Date()) {
   return pickByDay(pool, date)
 }
 
+function trimNote(text) {
+  return text ? String(text).replace(/\s+/g, ' ').slice(0, 68) + '…' : ''
+}
+
+/**
+ * 「今日读物」的唯一真相：从文章 / 故事 / 诗里选出今天的候选，
+ * 并把今天被选中的那一篇排在最前。首页与 /today 必须共用它，
+ * 否则两处会给出互相矛盾的答案。
+ * 每项形如 { kind, type, title, link, note, slug, meta, poem }。
+ */
+export function todayPicks({ articles = [], stories = [], poems = [] } = {}, date = new Date()) {
+  const a = pickByDay(articles, date)
+  const s = pickByDay(stories, date)
+  const p = pickByDay(poems, date)
+  const pool = [
+    a && { kind: '文章', type: 'article', title: a.title, link: `/articles/${a.slug}`, note: trimNote(a.excerpt), slug: a.slug, meta: a },
+    s && { kind: '故事', type: 'story', title: s.title, link: `/stories/${s.slug}`, note: trimNote(s.excerpt), slug: s.slug, meta: s },
+    p && { kind: '诗', type: 'poem', title: p.title, link: `/poetry?open=${p.slug}`, note: p.author || '', slug: p.slug, highlight: p.highlight || '', meta: null, poem: p }
+  ].filter(Boolean)
+  if (!pool.length) return []
+  const start = dailySeed(date) % pool.length
+  return pool.map((_, i) => pool[(start + i) % pool.length])
+}
+
+/** 今天该读的那一篇；无内容时返回 null */
+export function todayPiece(pools, date = new Date()) {
+  return todayPicks(pools, date)[0] || null
+}
+
 /** 中文问候语，按小时变化 */
 export function greeting(date = new Date()) {
   const h = date.getHours()

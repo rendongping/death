@@ -5,7 +5,7 @@ duration: "20分钟"
 difficulty: "中等"
 turn: "如果你登记了但没跟家人说，你觉得他们会在病房里同意吗？"
 action_text: "约 TA 谈这一次"
-action_link: "/commitments"
+action_link: "/advance-directives"
 ---
 
 ## 一个很多人不知道的实情

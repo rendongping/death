@@ -148,7 +148,7 @@ import { useReflectionsStore } from '@/stores/reflections'
 import { useGazeStore } from '@/stores/gaze'
 import { useCommitmentsStore } from '@/stores/commitments'
 import { resolveTurn, resolvePoetryTurn } from '@/data/turns'
-import { pickByDay, dailySeed, greeting, dateLabel } from '@/data/daily'
+import { pickByDay, dailySeed, greeting, dateLabel, todayPiece as pickTodayPiece } from '@/data/daily'
 import CommitButton from '@/components/interactive/CommitButton.vue'
 import TimeCapsule from '@/components/interactive/TimeCapsule.vue'
 import CrisisCard from '@/components/ui/CrisisCard.vue'
@@ -214,20 +214,8 @@ function markRead() {
 
 const todayPiece = computed(() => {
   if (loading.value) return null
-  const a = pickByDay(articles.value, now)
-  const s = pickByDay(stories.value, now)
-  const p = pickByDay(poems.value, now)
-  const pool = [
-    a && { kind: '文章', title: a.title, link: `/articles/${a.slug}`, note: trim(a.excerpt), meta: a },
-    s && { kind: '故事', title: s.title, link: `/stories/${s.slug}`, note: trim(s.excerpt), meta: s },
-    p && { kind: '诗', title: p.title, link: `/poetry?open=${p.slug}`, note: p.author || '', meta: null, poem: p }
-  ].filter(Boolean)
-  return pickByDay(pool, now)
+  return pickTodayPiece({ articles: articles.value, stories: stories.value, poems: poems.value }, now)
 })
-
-function trim(text) {
-  return text ? String(text).replace(/\s+/g, ' ').slice(0, 68) + '…' : ''
-}
 
 const question = computed(() => {
   const piece = todayPiece.value

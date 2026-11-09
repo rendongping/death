@@ -161,7 +161,8 @@ const TYPE_LABEL = {
   archive: '一首悼亡诗',
   way: '一种死法',
   recommendation: '一部作品',
-  memorial: '哀悼空间'
+  memorial: '哀悼空间',
+  bucket: '一个心愿'
 }
 
 function sourceLabel(c) {

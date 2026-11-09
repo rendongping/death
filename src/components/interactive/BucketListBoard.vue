@@ -77,6 +77,22 @@
             </div>
             <span v-if="item.note" class="item-note">{{ item.note }}</span>
             <span class="item-date">{{ formatDate(item.createdAt) }}</span>
+            <div class="item-commit">
+              <CommitButton
+                v-if="opened.has(String(item.id))"
+                inline
+                compact
+                lead=""
+                :action="item.title"
+                link="/bucketlist"
+                sourceType="bucket"
+                :sourceSlug="String(item.id)"
+                :sourceTitle="item.title"
+              />
+              <button v-else class="commit-toggle" @click="openCommit(item.id)">
+                定个日子
+              </button>
+            </div>
           </div>
           <button class="item-delete" @click="deleteItem(item.id)" title="删除">×</button>
         </li>
@@ -127,7 +143,9 @@ import { ref, computed } from 'vue'
 import WarmButton from '@/components/ui/WarmButton.vue'
 import WarmCard from '@/components/ui/WarmCard.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import CommitButton from '@/components/interactive/CommitButton.vue'
 import { useBucketlistStore } from '@/stores/bucketlist'
+import { useCommitmentsStore } from '@/stores/commitments'
 import { weekIndexOf, lightUpWeek } from '@/utils/week-of-life'
 
 const litThisTime = ref(null)
@@ -166,6 +184,14 @@ const categories = [
 ]
 
 const bucketlist = useBucketlistStore()
+const commitments = useCommitmentsStore()
+
+// 已经立过日子的条目直接显示回执，不必再点一次「定个日子」
+const opened = ref(new Set(commitments.open.filter(c => c.sourceType === 'bucket').map(c => c.sourceSlug)))
+
+function openCommit(id) {
+  opened.value = new Set([...opened.value, String(id)])
+}
 
 const newItemTitle = ref('')
 const newItemCategory = ref('experience')
@@ -194,6 +220,10 @@ function toggleItem(id) {
     const week = weekIndexOf()
     litThisTime.value = week === null ? -1 : week
     if (week !== null) lightUpWeek(week)
+    // 心愿本身被划掉时，为它立的日子就同时兑现了，不该再回首页追问
+    commitments.open
+      .filter(c => c.sourceType === 'bucket' && c.sourceSlug === String(id))
+      .forEach(c => commitments.markDone(c.id, '在遗愿清单里划掉了它'))
   } else {
     litThisTime.value = null
   }
@@ -407,6 +437,26 @@ function getCategoryName(categoryId) {
   font-size: var(--text-xs);
   color: var(--color-text-lighter);
   margin-top: 4px;
+}
+
+.item-commit {
+  margin-top: var(--space-sm);
+}
+
+.commit-toggle {
+  padding: 2px var(--space-md);
+  background: transparent;
+  border: 1px dashed var(--color-gold);
+  border-radius: var(--radius-full);
+  color: var(--color-gold-dark);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.commit-toggle:hover {
+  background: var(--color-gold);
+  color: #fff;
 }
 
 .item-check {

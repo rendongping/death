@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!done" class="commit-button">
+  <div v-if="!done" class="commit-button" :class="{ 'commit-button--inline': inline }">
     <span v-if="lead" class="commit-lead">{{ lead }}</span>
     <div class="commit-options">
       <button
@@ -13,7 +13,7 @@
       </button>
     </div>
   </div>
-  <div v-else class="committed-note">
+  <div v-else class="committed-note" :class="{ 'committed-note--inline': inline }">
     <span class="committed-mark">✦</span>
     已记下：<strong>{{ doneText }}</strong>
     <router-link to="/commitments" class="committed-link">看看我的约定</router-link>
@@ -32,7 +32,8 @@ const props = defineProps({
   sourceSlug: { type: String, default: '' },
   sourceTitle: { type: String, default: '' },
   lead: { type: String, default: '顺手给自己定个日子，它到期会回到首页找你' },
-  compact: { type: Boolean, default: false }
+  compact: { type: Boolean, default: false },
+  inline: { type: Boolean, default: false }
 })
 
 const OPTIONS = [
@@ -46,14 +47,27 @@ const options = OPTIONS
 const done = ref(false)
 const doneText = ref('')
 
-// 同一个组件实例在内容间复用（如文章 A → 文章 B）时，不能把上一件的「已记下」带过去
-watch(
-  () => [props.sourceSlug, props.action].join('|'),
-  () => {
+/** 已经立过、且还没完成的承诺，重进页面时直接显示回执，不重复催第二次 */
+function sync() {
+  const existed =
+    props.sourceSlug && props.action
+      ? commitments.open.find(
+          c => c.sourceSlug === props.sourceSlug && c.action === props.action
+        )
+      : null
+  if (existed) {
+    doneText.value = `${existed.dueAt} 前做「${existed.action}」`
+    done.value = true
+  } else {
     done.value = false
     doneText.value = ''
   }
-)
+}
+
+sync()
+
+// 同一个组件实例在内容间复用（如文章 A → 文章 B）时，不能把上一件的「已记下」带过去
+watch(() => [props.sourceSlug, props.action].join('|'), sync)
 
 function make(days) {
   commitments.commit({
@@ -128,5 +142,18 @@ function make(days) {
 .committed-link {
   margin-left: var(--space-sm);
   color: var(--color-gold-dark);
+}
+
+/* 嵌在列表项里的形态：跟着左边缘排，不抢整行居中 */
+.commit-button--inline {
+  align-items: flex-start;
+}
+
+.commit-button--inline .commit-options {
+  justify-content: flex-start;
+}
+
+.committed-note--inline {
+  text-align: left;
 }
 </style>

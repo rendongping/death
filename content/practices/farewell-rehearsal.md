@@ -5,7 +5,7 @@ duration: "90分钟"
 difficulty: "较深"
 turn: "演练里说不出口的那句话，为什么一定要等到那天？"
 action_text: "约那个人谈一次"
-action_link: "/commitments"
+action_link: "/letters"
 ---
 
 ## 为什么是「演练」

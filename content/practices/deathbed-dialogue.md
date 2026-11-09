@@ -5,7 +5,7 @@ duration: "30分钟"
 difficulty: "较深"
 turn: "四句话里你最说不出口的那一句，卡在哪个字上？"
 action_text: "对真人说一句试试"
-action_link: "/commitments"
+action_link: "/letters"
 ---
 
 ## 为什么要在还没发生的时候练

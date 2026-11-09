@@ -5,7 +5,7 @@ duration: "40分钟"
 difficulty: "中等"
 turn: "这份清单里最难填的那一格，是信息问题还是关系问题？"
 action_text: "约一个人交代它"
-action_link: "/commitments"
+action_link: "/advance-directives"
 ---
 
 ## 它不是遗产规划

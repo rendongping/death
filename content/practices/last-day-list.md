@@ -5,7 +5,7 @@ duration: "15分钟"
 difficulty: "中等"
 turn: "清单里那些'只属于最后一天'的事，为什么不能是今天的事？"
 action_text: "挑一件放进这七天"
-action_link: "/commitments"
+action_link: "/bucketlist"
 ---
 
 ## 前提

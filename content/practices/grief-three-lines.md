@@ -5,7 +5,7 @@ duration: "每天10分钟"
 difficulty: "简单"
 turn: "今天这三件里，哪一件是为自己做的？"
 action_text: "明天也写下三件"
-action_link: "/commitments"
+action_link: "/today"
 ---
 
 ## 写给正在办丧事或刚办完的人

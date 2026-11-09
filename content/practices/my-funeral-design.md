@@ -5,7 +5,7 @@ duration: "25分钟"
 difficulty: "中等"
 turn: "你设计的这场葬礼里，最不想出现的那个元素，为什么？"
 action_text: "把这场葬礼讲给一个人听"
-action_link: "/commitments"
+action_link: "/letters"
 ---
 
 ## 为什么值得单独做

@@ -51,10 +51,7 @@
       </div>
     </section>
 
-    <!-- 生命倒计时 -->
-    <LifeCountdown />
-
-    <!-- 今日状态条：把首页从「内容目录」变成「回来的地方」 -->
+    <!-- 今日状态条：把首页从「内容目录」变成「回来的地方」。放在倒计时之前，因为它回答的是「今天还差什么」 -->
     <section class="today-strip">
       <div class="strip-dots">
         <span class="strip-dot" :class="{ on: gazeStore.hasGazedToday }">凝视</span>
@@ -66,25 +63,25 @@
       </router-link>
     </section>
 
+    <!-- 生命倒计时 -->
+    <LifeCountdown />
+
     <!-- 今日凝视 -->
     <section class="today-section">
       <h2 class="section-title">今日读物</h2>
       <div class="today-grid">
-        <router-link :to="todayArticle.link" class="today-card today-card--article" @click="setLastRead('article', todayArticle.slug, todayArticle.title)">
-          <span class="today-label">读一篇文章</span>
-          <h3>{{ todayArticle.title }}</h3>
-          <p>{{ todayArticle.excerpt }}</p>
-        </router-link>
-        <router-link :to="todayPoem.link" class="today-card today-card--poem" @click="recordGaze">
-          <span class="today-label">今日诗签</span>
-          <h3>{{ todayPoem.title }}</h3>
-          <p v-if="todayPoem.highlight" class="today-poem-highlight">「{{ todayPoem.highlight }}」</p>
-          <p v-else>{{ todayPoem.author }}</p>
-        </router-link>
-        <router-link :to="todayStory.link" class="today-card today-card--story" @click="setLastRead('story', todayStory.slug, todayStory.title)">
-          <span class="today-label">读一个故事</span>
-          <h3>{{ todayStory.title }}</h3>
-          <p>{{ todayStory.excerpt }}</p>
+        <router-link
+          v-for="p in todayReads"
+          :key="p.type"
+          :to="p.link"
+          class="today-card"
+          :class="`today-card--${p.type}`"
+          @click="markPieceRead(p)"
+        >
+          <span class="today-label">{{ pieceLabel(p) }}</span>
+          <h3>{{ p.title }}</h3>
+          <p v-if="p.highlight" class="today-poem-highlight">「{{ p.highlight }}」</p>
+          <p v-else>{{ p.note }}</p>
         </router-link>
         <router-link to="/ways-to-die" class="today-card today-card--ways" @click="recordGaze">
           <span class="today-label">认识一种离开</span>
@@ -242,6 +239,7 @@ import { useGazeStore } from '@/stores/gaze'
 import { useCommitmentsStore } from '@/stores/commitments'
 import { downloadBackup, importBackup } from '@/utils/backup'
 import { ACTS } from '@/data/acts'
+import { todayPicks } from '@/data/daily'
 import LifeCountdown from '@/components/interactive/LifeCountdown.vue'
 import DailyPrompt from '@/components/interactive/DailyPrompt.vue'
 import TimeCapsule from '@/components/interactive/TimeCapsule.vue'
@@ -287,36 +285,20 @@ const dateText = computed(() => {
   return `${d.getMonth() + 1}月${d.getDate()}日`
 })
 
-const todayArticle = computed(() => {
-  if (!articles.value.length) return { title: '加载中…', excerpt: '', link: '/articles' }
-  const idx = dayOfYear() % articles.value.length
-  const a = articles.value[idx]
-  return {
-    title: a.title,
-    slug: a.slug,
-    excerpt: a.excerpt ? a.excerpt.slice(0, 60) + '…' : '',
-    link: `/articles/${a.slug}`
-  }
-})
+const todayReads = computed(() =>
+  todayPicks({ articles: articles.value, stories: stories.value, poems: poems.value })
+)
 
-const todayPoem = computed(() => {
-  if (!poems.value.length) return { title: '加载中…', author: '', link: '/poetry' }
-  const idx = dayOfYear() % poems.value.length
-  const p = poems.value[idx]
-  return { title: p.title, author: p.author, highlight: p.highlight || '', link: '/poetry' }
-})
+function pieceLabel(p) {
+  if (p.type === 'poem') return '今日诗签'
+  return p.type === 'story' ? '读一个故事' : '读一篇文章'
+}
 
-const todayStory = computed(() => {
-  if (!stories.value.length) return { title: '加载中…', excerpt: '', link: '/stories' }
-  const idx = dayOfYear() % stories.value.length
-  const s = stories.value[idx]
-  return {
-    title: s.title,
-    slug: s.slug,
-    excerpt: s.excerpt ? s.excerpt.slice(0, 60) + '…' : '',
-    link: `/stories/${s.slug}`
-  }
-})
+function markPieceRead(p) {
+  gazeStore.recordGaze()
+  if (p.type === 'poem') return
+  profileStore.setLastRead({ type: p.type, slug: p.slug, title: p.title, link: p.link })
+}
 
 const todayWay = computed(() => {
   if (!waysEntries.value.length) return { name: '加载中…', summary: '' }
@@ -475,8 +457,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: var(--space-3xl);
-  min-height: 68vh;
-  padding: var(--space-4xl) 0;
+  padding: var(--space-2xl) 0 var(--space-xl);
   overflow: hidden;
 }
 
